@@ -97,6 +97,8 @@ export default class RNWebView extends Component<
   EdisonWebViewProps,
   EdisonWebViewState
 > {
+  timeoutMap: Map<string, NodeJS.Timeout> = new Map();
+  webviewMounted: boolean = false;
   constructor(props: any) {
     super(props);
     this.state = {
@@ -132,11 +134,25 @@ export default class RNWebView extends Component<
     functionName: typeof InjectScriptName[keyof typeof InjectScriptName],
     parameter?: string
   ) => {
-    if (this.webViewRef.current) {
-      this.webViewRef.current.injectJavaScript(
-        `window.${functionName}(${parameter ? `'${parameter}'` : ""});true;`
-      );
+    if (!this.webViewRef.current) {
+      return;
     }
+    const timeout = this.timeoutMap.get(functionName);
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+    if (!this.webviewMounted) {
+      this.timeoutMap.set(
+        functionName,
+        setTimeout(() => {
+          this.executeScript(functionName, parameter);
+        }, 100)
+      );
+      return;
+    }
+    this.webViewRef.current.injectJavaScript(
+      `window.${functionName}(${parameter ? `'${parameter}'` : ""});true;`
+    );
   };
 
   private onMessage = (event: WebViewMessageEvent) => {
@@ -146,6 +162,7 @@ export default class RNWebView extends Component<
         data: any;
       } = JSON.parse(event.nativeEvent.data);
       if (messageData.type === EventName.IsMounted) {
+        this.webviewMounted = true;
         this.initHtml();
         this.executeScript(
           InjectScriptName.SetDarkMode,
