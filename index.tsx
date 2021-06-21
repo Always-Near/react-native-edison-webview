@@ -151,7 +151,9 @@ export default class RNWebView extends Component<
       return;
     }
     this.webViewRef.current.injectJavaScript(
-      `window.${functionName}(${parameter ? `'${parameter}'` : ""});true;`
+      `window.${functionName} && window.${functionName}(${
+        parameter ? `'${parameter}'` : ""
+      });true;`
     );
   };
 
