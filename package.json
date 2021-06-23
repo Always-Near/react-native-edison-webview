@@ -1,6 +1,6 @@
 {
   "name": "react-native-edison-webview",
-  "version": "0.10.15",
+  "version": "0.10.20",
   "description": "body for message",
   "main": "index.js",
   "types": "index.d.ts",
@@ -22,7 +22,7 @@
   "peerDependencies": {
     "react": "^17.0.1",
     "react-native": "^0.60.4",
-    "react-native-webview": "^5.12.1"
+    "react-native-webview": "11.6.4"
   },
   "devDependencies": {
     "@babel/core": "^7.6.4",
@@ -41,7 +41,7 @@
     "less-loader": "^7.2.1",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
-    "react-native-webview": "^11.0.2",
+    "react-native-webview": "11.6.4",
     "script-ext-html-webpack-plugin": "^2.1.5",
     "style-loader": "^2.0.0",
     "typescript": "^4.1.3",
