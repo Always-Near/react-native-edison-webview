@@ -50,7 +50,6 @@ class App extends React.Component<any, State> {
 
   componentDidMount() {
     window.setHTML = this.setHTML;
-    window.setDarkMode = this.setDarkMode;
     window.setPreviewMode = this.setPreviewMode;
 
     window.addEventListener("resize", () => {
@@ -81,23 +80,24 @@ class App extends React.Component<any, State> {
     }
   };
 
-  private setHTML = (html: string) => {
+  private setHTML = (params: string) => {
     try {
+      const { html, isDarkMode } = JSON.parse(params);
       if (html) {
         const htmlStr = Buffer.from(html, "base64").toString("utf-8");
         // clear the meta to keep style
         const reg = /<meta\s+name=(['"\s]?)viewport\1\s+content=[^>]*>/gi;
         const formatHTML = htmlStr.replace(reg, "");
         const hasImgOrVideo = this.calcHasImgOrVideo(formatHTML);
-        this.setState({ html: formatHTML, hasImgOrVideo });
+        this.setState({
+          html: formatHTML,
+          hasImgOrVideo,
+          isDarkMode,
+        });
       }
     } catch (e) {
       console.error(e);
     }
-  };
-
-  private setDarkMode = (isDarkMode: string) => {
-    this.setState({ isDarkMode: isDarkMode === String(true) });
   };
 
   private setPreviewMode = (isPreviewMode: string) => {

@@ -1,6 +1,5 @@
 declare interface Window {
   ReactNativeWebView: any;
-  setHTML: (html: string) => void;
-  setDarkMode: (isDarkMode: string) => void;
+  setHTML: (params: string) => void;
   setPreviewMode: (isPreviewMode: string) => void;
 }

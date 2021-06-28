@@ -12,7 +12,6 @@ import "./index.html";
 
 const InjectScriptName = {
   SetHTML: "setHTML",
-  SetDarkMode: "setDarkMode",
   SetPreviewMode: "setPreviewMode",
 } as const;
 
@@ -113,20 +112,17 @@ export default class RNWebView extends Component<
   }
 
   componentDidUpdate(prevProps: EdisonWebViewProps) {
-    if (prevProps.isDrakMode !== this.props.isDrakMode) {
-      this.executeScript(
-        InjectScriptName.SetDarkMode,
-        String(!!this.props.isDrakMode)
-      );
+    if (
+      prevProps.isDrakMode !== this.props.isDrakMode ||
+      prevProps.html !== this.props.html
+    ) {
+      this.initHtml();
     }
     if (prevProps.isPreviewMode !== this.props.isPreviewMode) {
       this.executeScript(
         InjectScriptName.SetPreviewMode,
         String(!!this.props.isPreviewMode)
       );
-    }
-    if (prevProps.html !== this.props.html) {
-      this.initHtml();
     }
   }
 
@@ -167,10 +163,6 @@ export default class RNWebView extends Component<
         this.webviewMounted = true;
         this.initHtml();
         this.executeScript(
-          InjectScriptName.SetDarkMode,
-          String(!!this.props.isDrakMode)
-        );
-        this.executeScript(
           InjectScriptName.SetPreviewMode,
           String(!!this.props.isPreviewMode)
         );
@@ -186,7 +178,13 @@ export default class RNWebView extends Component<
     const formatHtmlBase64 = Buffer.from(this.props.html, "utf-8").toString(
       "base64"
     );
-    this.executeScript(InjectScriptName.SetHTML, formatHtmlBase64);
+    this.executeScript(
+      InjectScriptName.SetHTML,
+      JSON.stringify({
+        html: formatHtmlBase64,
+        isDarkMode: this.props.isDrakMode,
+      })
+    );
   };
 
   render() {
