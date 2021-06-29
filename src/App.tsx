@@ -65,7 +65,6 @@ class App extends React.Component<any, State> {
       preState.isPreviewMode !== this.state.isPreviewMode
     ) {
       this.debounceOnContentChange();
-      this.postMessage(EventName.OnLoad, true);
     }
   }
 
@@ -307,6 +306,10 @@ class App extends React.Component<any, State> {
     this.limitImageWidth();
     this.smartResize();
     this.specialHandle();
+
+    setTimeout(() => {
+      this.postMessage(EventName.OnLoad, true);
+    }, 300);
   };
 
   private debounceOnContentChange = debounce(this.onContentChange, 300);
