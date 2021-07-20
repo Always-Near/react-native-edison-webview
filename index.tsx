@@ -197,11 +197,6 @@ export default class RNWebView extends Component<
         allowFileAccess
         allowingReadAccessToURL={"file://"}
         onMessage={this.onMessage}
-        androidLayerType={
-          Platform.OS === "android" && Platform.Version === 29
-            ? "hardware"
-            : "none"
-        }
       />
     );
   }
