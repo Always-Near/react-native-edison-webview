@@ -1,0 +1,105 @@
+html,
+body.edo,
+pre,
+xmp {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  font-size: 17px;
+  -webkit-text-size-adjust: none;
+  font: -apple-system-body;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  -webkit-nbsp-mode: space !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+#edo-container {
+  box-sizing: border-box;
+  overflow: hidden;
+
+  span {
+    white-space: normal;
+  }
+
+  table {
+    max-width: 100%;
+  }
+
+  code {
+    word-break: break-all;
+  }
+
+  pre,
+  xmp {
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    overflow: hidden !important;
+  }
+
+  &::-webkit-scrollbar {
+    width: 0 !important;
+  }
+}
+
+table.hide td.hide {
+  width: initial !important;
+  /* Fix iTunes Email format */
+}
+
+.edo-transform {
+  transform-origin: 0px 0px;
+}
+
+.x-apple-signature {
+  margin-top: 15px;
+}
+
+pre br,
+xmp br {
+  display: none;
+}
+
+a {
+  color: #0097ff;
+}
+
+img.edo-limit-width {
+  max-width: 100% !important;
+}
+
+.edo-overflow-scroll {
+  overflow: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+blockquote,
+div.gmail_quote,
+div.yahoo_quoted {
+  margin: 1ex 0 0 0 !important;
+  border-left: 1px #ccc solid !important;
+  padding-left: 0.5ex !important;
+}
+
+blockquote.gmail_quote {
+  border-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+body.edo img[src^="cid:"] {
+  visibility: hidden;
+}
+
+blockquote blockquote blockquote blockquote,
+div.gmail_quote div.gmail_quote div.gmail_quote div.gmail_quote,
+div.yahoo_quoted div.yahoo_quoted div.yahoo_quoted div.yahoo_quoted {
+  margin: 0 !important;
+  border-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+object {
+  display: none !important;
+}
