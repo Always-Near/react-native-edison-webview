@@ -1,6 +1,6 @@
 {
   "name": "react-native-edison-webview",
-  "version": "0.10.32",
+  "version": "0.10.33",
   "description": "body for message",
   "main": "index.js",
   "types": "index.d.ts",
