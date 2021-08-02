@@ -5,6 +5,8 @@ import DarkModeUtil from "./utils/dark-mode";
 import OversizeUtil from "./utils/oversize";
 import ResizeUtil from "./utils/samrt-resize";
 import SpecialHandle from "./utils/special-handle";
+import QuotedHTMLTransformer from "./utils/quoted-html-transformer";
+import QuotedControl from "./components/QuotedControl";
 
 const EventName = {
   IsMounted: "isMounted",
@@ -35,6 +37,8 @@ type State = {
   isPreviewMode: boolean;
   hasImgOrVideo: boolean;
   html: string;
+  showHtml: string;
+  showQuotedText: boolean;
 };
 
 class App extends React.Component<any, State> {
@@ -45,6 +49,8 @@ class App extends React.Component<any, State> {
       isPreviewMode: false,
       hasImgOrVideo: false,
       html: "",
+      showHtml: "",
+      showQuotedText: false,
     };
   }
 
@@ -60,7 +66,7 @@ class App extends React.Component<any, State> {
 
   componentDidUpdate(preProps: any, preState: State) {
     if (
-      preState.html !== this.state.html ||
+      preState.showHtml !== this.state.showHtml ||
       preState.isDarkMode !== this.state.isDarkMode ||
       preState.isPreviewMode !== this.state.isPreviewMode
     ) {
@@ -88,8 +94,12 @@ class App extends React.Component<any, State> {
         const reg = /<meta\s+name=(['"\s]?)viewport\1\s+content=[^>]*>/gi;
         const formatHTML = htmlStr.replace(reg, "");
         const hasImgOrVideo = this.calcHasImgOrVideo(formatHTML);
+        const showHtml = this.state.showQuotedText
+          ? formatHTML
+          : QuotedHTMLTransformer.removeQuotedHTML(formatHTML);
         this.setState({
           html: formatHTML,
+          showHtml,
           hasImgOrVideo,
           isDarkMode,
         });
@@ -314,8 +324,26 @@ class App extends React.Component<any, State> {
 
   private debounceOnContentChange = debounce(this.onContentChange, 300);
 
+  private toggleshowQuotedText = () => {
+    const { html, showQuotedText } = this.state;
+    const showHtml = !showQuotedText
+      ? html
+      : QuotedHTMLTransformer.removeQuotedHTML(html);
+    this.setState({
+      showQuotedText: !showQuotedText,
+      showHtml,
+    });
+  };
+
   render() {
-    const { html, isDarkMode, isPreviewMode, hasImgOrVideo } = this.state;
+    const {
+      html,
+      showHtml,
+      showQuotedText,
+      isDarkMode,
+      isPreviewMode,
+      hasImgOrVideo,
+    } = this.state;
     const containerStyles: React.CSSProperties =
       isPreviewMode && !hasImgOrVideo ? { padding: "2ex" } : {};
     return (
@@ -323,8 +351,9 @@ class App extends React.Component<any, State> {
         <style>{isDarkMode ? darkModeStyle : lightModeStyle}</style>
         <div
           style={containerStyles}
-          dangerouslySetInnerHTML={{ __html: html }}
+          dangerouslySetInnerHTML={{ __html: showHtml }}
         />
+        <QuotedControl html={html} onClick={this.toggleshowQuotedText} />
       </>
     );
   }
