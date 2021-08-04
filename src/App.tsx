@@ -349,11 +349,11 @@ class App extends React.Component<any, State> {
     return (
       <>
         <style>{isDarkMode ? darkModeStyle : lightModeStyle}</style>
-        <div
-          style={containerStyles}
-          dangerouslySetInnerHTML={{ __html: showHtml }}
-        />
-        <QuotedControl html={html} onClick={this.toggleshowQuotedText} />
+
+        <div style={containerStyles}>
+          <div dangerouslySetInnerHTML={{ __html: showHtml }}></div>
+          <QuotedControl html={html} onClick={this.toggleshowQuotedText} />
+        </div>
       </>
     );
   }
