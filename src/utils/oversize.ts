@@ -30,7 +30,7 @@ class OversizeUtils {
       styles.width == undefined
     ) {
       if (
-        !element.style.maxWidth ||
+        element.style.maxWidth &&
         parseInt(element.style.maxWidth) > window.innerWidth - 100
       ) {
         return true;
