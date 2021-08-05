@@ -70,7 +70,7 @@ class App extends React.Component<any, State> {
       preState.isDarkMode !== this.state.isDarkMode ||
       preState.isPreviewMode !== this.state.isPreviewMode
     ) {
-      this.debounceOnContentChange();
+      this.onContentChange();
     }
   }
 
@@ -317,12 +317,8 @@ class App extends React.Component<any, State> {
     this.smartResize();
     this.specialHandle();
 
-    setTimeout(() => {
-      this.postMessage(EventName.OnLoad, true);
-    }, 300);
+    this.postMessage(EventName.OnLoad, true);
   };
-
-  private debounceOnContentChange = debounce(this.onContentChange, 300);
 
   private toggleshowQuotedText = () => {
     const { html, showQuotedText } = this.state;
@@ -360,16 +356,3 @@ class App extends React.Component<any, State> {
 }
 
 export default App;
-
-function debounce<T extends Array<any>>(
-  fn: (...args: T) => void,
-  delay: number
-) {
-  let timer: number | null = null; //借助闭包
-  return function (...args: T) {
-    if (timer) {
-      clearTimeout(timer);
-    }
-    timer = setTimeout(() => fn(...args), delay);
-  };
-}
