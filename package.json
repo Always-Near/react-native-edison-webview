@@ -1,9 +1,9 @@
 {
   "name": "react-native-edison-webview",
-  "version": "0.10.40",
+  "version": "0.10.41",
   "description": "body for message",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
     "dev": "webpack serve -c ./config/webpack.dev.js",
     "dev-with-host": "webpack serve -c ./config/webpack.dev.js --host 0.0.0.0",
