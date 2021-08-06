@@ -11,6 +11,7 @@ import QuotedControl from "./components/QuotedControl";
 const EventName = {
   IsMounted: "isMounted",
   OnLoad: "onLoad",
+  OnAllImageLoad: "onAllImageLoad",
   HeightChange: "heightChange",
   ClickLink: "clickLink",
   Debugger: "debugger",
@@ -145,6 +146,21 @@ class App extends React.Component<any, State> {
     this.postMessage(EventName.HeightChange, calcHeight);
   };
 
+  private onImageLoad = () => {
+    this.updateSize("image-load");
+    const container = document.getElementById("edo-container");
+    if (!container) {
+      return;
+    }
+    if (
+      Array.from(container.querySelectorAll("img")).every((el) => {
+        return el.complete;
+      })
+    ) {
+      this.postMessage(EventName.OnAllImageLoad, true);
+    }
+  };
+
   private applyDarkMode = () => {
     try {
       const container = document.getElementById("edo-container");
@@ -210,9 +226,7 @@ class App extends React.Component<any, State> {
       return;
     }
     Array.from(container.querySelectorAll("img")).forEach((ele) => {
-      ele.addEventListener("load", (e) => {
-        this.updateSize("image-load");
-      });
+      ele.addEventListener("load", this.onImageLoad);
     });
   };
 
