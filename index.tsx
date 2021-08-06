@@ -18,6 +18,7 @@ const InjectScriptName = {
 const EventName = {
   IsMounted: "isMounted",
   OnLoad: "onLoad",
+  OnAllImageLoad: "onAllImageLoad",
   HeightChange: "heightChange",
   ClickLink: "clickLink",
   Debugger: "debugger",
