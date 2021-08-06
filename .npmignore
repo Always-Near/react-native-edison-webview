@@ -1,6 +1,5 @@
 config/
 src/
-index.tsx
 README.md
 tsconfig.json
 yarn.lock

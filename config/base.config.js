@@ -1,16 +1,16 @@
 const path = require("path");
-const appPath = path.join(__dirname, "../");
-const srcPath = path.join(appPath, "src/");
-const tsConfigPath = path.join(srcPath, "tsconfig.json");
-const mainPath = path.join(srcPath, "index.tsx");
-const templatePath = path.join(srcPath, "index.html");
+const appPath = path.join(__dirname, "../src/web/");
+const tsConfigPath = path.join(appPath, "tsconfig.json");
+const mainPath = path.join(appPath, "index.tsx");
+const templatePath = path.join(appPath, "index.html");
+const outputPath = path.join(__dirname, "../lib");
 const port = 8080;
 
 module.exports = {
-  srcPath,
+  appPath,
   tsConfigPath,
   mainPath,
   templatePath,
-  appPath,
   port,
+  outputPath,
 };

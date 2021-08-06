@@ -1,21 +1,13 @@
 import { Buffer } from "buffer";
 import React from "react";
+import { EventName } from "../constants";
+import QuotedControl from "./components/QuotedControl";
 import "./styles";
 import DarkModeUtil from "./utils/dark-mode";
 import OversizeUtil from "./utils/oversize";
+import QuotedHTMLTransformer from "./utils/quoted-html-transformer";
 import ResizeUtil from "./utils/samrt-resize";
 import SpecialHandle from "./utils/special-handle";
-import QuotedHTMLTransformer from "./utils/quoted-html-transformer";
-import QuotedControl from "./components/QuotedControl";
-
-const EventName = {
-  IsMounted: "isMounted",
-  OnLoad: "onLoad",
-  OnAllImageLoad: "onAllImageLoad",
-  HeightChange: "heightChange",
-  ClickLink: "clickLink",
-  Debugger: "debugger",
-} as const;
 
 const darkModeStyle = `
   html, body.edo, #edo-container {
@@ -43,6 +35,9 @@ type State = {
 };
 
 class App extends React.Component<any, State> {
+  private hasImageInBody: boolean = true;
+  private hasAllImageLoad: boolean = false;
+
   constructor(props: any) {
     super(props);
     this.state = {
@@ -157,7 +152,14 @@ class App extends React.Component<any, State> {
         return el.complete;
       })
     ) {
-      this.postMessage(EventName.OnAllImageLoad, true);
+      this.onAllImageLoad();
+    }
+  };
+
+  private onAllImageLoad = () => {
+    if (!this.hasAllImageLoad) {
+      this.hasAllImageLoad = true;
+      this.postMessage(EventName.OnLoadFinish, true);
     }
   };
 
@@ -225,7 +227,11 @@ class App extends React.Component<any, State> {
     if (!container) {
       return;
     }
-    Array.from(container.querySelectorAll("img")).forEach((ele) => {
+    const images = Array.from(container.querySelectorAll("img"));
+
+    this.hasImageInBody = images.length > 0;
+
+    images.forEach((ele) => {
       ele.addEventListener("load", this.onImageLoad);
     });
   };
@@ -332,6 +338,10 @@ class App extends React.Component<any, State> {
     this.specialHandle();
 
     this.postMessage(EventName.OnLoad, true);
+
+    if (!this.hasImageInBody) {
+      this.onAllImageLoad();
+    }
   };
 
   private toggleshowQuotedText = () => {

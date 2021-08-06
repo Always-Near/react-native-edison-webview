@@ -8,7 +8,6 @@ module.exports = merge(baseConfig, {
   devtool: "cheap-module-eval-source-map",
   devServer: {
     port: config.port,
-    contentBase: config.distPath,
     publicPath: "/",
     historyApiFallback: true,
     watchContentBase: true,

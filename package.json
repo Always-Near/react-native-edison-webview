@@ -1,13 +1,13 @@
 {
   "name": "react-native-edison-webview",
-  "version": "0.10.38",
+  "version": "0.10.40",
   "description": "body for message",
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
     "dev": "webpack serve -c ./config/webpack.dev.js",
     "dev-with-host": "webpack serve -c ./config/webpack.dev.js --host 0.0.0.0",
-    "build": "webpack -c ./config/webpack.pro.js && yarn tsc"
+    "build": "rimraf lib && webpack -c ./config/webpack.pro.js && yarn tsc"
   },
   "homepage": "https://github.com/Always-Near/react-native-edison-webview",
   "keywords": [

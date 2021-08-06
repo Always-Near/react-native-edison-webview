@@ -5,7 +5,7 @@ module.exports = {
     main: config.mainPath,
   },
   output: {
-    path: config.appPath,
+    path: config.outputPath,
   },
   resolve: {
     extensions: [".js", ".json", ".jsx", ".ts", ".tsx", ".less", ".css"],

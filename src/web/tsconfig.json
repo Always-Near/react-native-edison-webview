@@ -1,9 +1,9 @@
 {
-  "extends": "../tsconfig",
+  "extends": "../../tsconfig",
   "compilerOptions": {
     "declaration": false,
     "sourceMap": false,
     "noEmit": true
   },
-  "include": ["./**/*.ts", "./**/*.tsx"]
+  "include": ["../constants/*.ts", "./**/*.ts", "./**/*.tsx"]
 }

@@ -21,7 +21,8 @@
     "emitDecoratorMetadata": true,
     "downlevelIteration": true,
     "strict": true,
-    "noEmit": false
+    "noEmit": false,
+    "outDir": "lib"
   },
-  "include": ["index.tsx"]
+  "include": ["src/index.tsx"]
 }
