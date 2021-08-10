@@ -20,7 +20,7 @@ const darkModeStyle = `
 
 const lightModeStyle = `
   html, body.edo, #edo-container {
-    background-color: #ffffff !important;
+    background-color: #fffffe !important;
   }
 `;
 
@@ -337,12 +337,22 @@ class App extends React.Component<any, State> {
     this.smartResize();
     this.specialHandle();
 
-    this.postMessage(EventName.OnLoad, true);
+    if (this.state.isDarkMode) {
+      this.debounceOnload();
+    } else {
+      this.onload();
+    }
 
     if (!this.hasImageInBody) {
       this.onAllImageLoad();
     }
   };
+
+  private onload = () => {
+    this.postMessage(EventName.OnLoad, true);
+  };
+
+  private debounceOnload = debounce(this.onload, 300);
 
   private toggleshowQuotedText = () => {
     const { html, showQuotedText } = this.state;
@@ -377,6 +387,19 @@ class App extends React.Component<any, State> {
       </>
     );
   }
+}
+
+function debounce<T extends Array<any>>(
+  fn: (...args: T) => void,
+  delay: number
+) {
+  let timer: number | null = null; //借助闭包
+  return function (...args: T) {
+    if (timer) {
+      clearTimeout(timer);
+    }
+    timer = setTimeout(() => fn(...args), delay);
+  };
 }
 
 export default App;
