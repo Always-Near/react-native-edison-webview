@@ -188,6 +188,7 @@ export default class RNWebView extends Component<
         originWhitelist={["*"]}
         source={{ uri: this.state.webviewUri }}
         allowFileAccess
+        forceDarkOn={this.props.isDrakMode}
         allowingReadAccessToURL={"file://"}
         onMessage={this.onMessage}
       />
