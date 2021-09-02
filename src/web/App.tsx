@@ -31,6 +31,7 @@ type State = {
   hasImgOrVideo: boolean;
   html: string;
   showHtml: string;
+  disabeHideQuotedText: boolean;
   showQuotedText: boolean;
 };
 
@@ -46,6 +47,7 @@ class App extends React.Component<any, State> {
       hasImgOrVideo: false,
       html: "",
       showHtml: "",
+      disabeHideQuotedText: false,
       showQuotedText: false,
     };
   }
@@ -83,21 +85,24 @@ class App extends React.Component<any, State> {
 
   private setHTML = (params: string) => {
     try {
-      const { html, isDarkMode } = JSON.parse(params);
+      const { html, isDarkMode, disabeHideQuotedText } = JSON.parse(params);
       if (html) {
         const htmlStr = Buffer.from(html, "base64").toString("utf-8");
         // clear the meta to keep style
         const reg = /<meta\s+name=(['"\s]?)viewport\1\s+content=[^>]*>/gi;
         const formatHTML = htmlStr.replace(reg, "");
         const hasImgOrVideo = this.calcHasImgOrVideo(formatHTML);
-        const showHtml = this.state.showQuotedText
-          ? formatHTML
-          : QuotedHTMLTransformer.removeQuotedHTML(formatHTML);
+        const { showQuotedText } = this.state;
+        const showHtml =
+          showQuotedText || disabeHideQuotedText
+            ? formatHTML
+            : QuotedHTMLTransformer.removeQuotedHTML(formatHTML);
         this.setState({
           html: formatHTML,
           showHtml,
           hasImgOrVideo,
           isDarkMode,
+          disabeHideQuotedText,
         });
       }
     } catch (e) {
@@ -355,12 +360,14 @@ class App extends React.Component<any, State> {
   private debounceOnload = debounce(this.onload, 300);
 
   private toggleshowQuotedText = () => {
-    const { html, showQuotedText } = this.state;
-    const showHtml = !showQuotedText
-      ? html
-      : QuotedHTMLTransformer.removeQuotedHTML(html);
+    const { html, showQuotedText, disabeHideQuotedText } = this.state;
+    const nextShowQuotedText = !showQuotedText;
+    const showHtml =
+      nextShowQuotedText || disabeHideQuotedText
+        ? html
+        : QuotedHTMLTransformer.removeQuotedHTML(html);
     this.setState({
-      showQuotedText: !showQuotedText,
+      showQuotedText: nextShowQuotedText,
       showHtml,
     });
   };
@@ -369,7 +376,7 @@ class App extends React.Component<any, State> {
     const {
       html,
       showHtml,
-      showQuotedText,
+      disabeHideQuotedText,
       isDarkMode,
       isPreviewMode,
       hasImgOrVideo,
@@ -382,7 +389,9 @@ class App extends React.Component<any, State> {
 
         <div style={containerStyles}>
           <div dangerouslySetInnerHTML={{ __html: showHtml }}></div>
-          <QuotedControl html={html} onClick={this.toggleshowQuotedText} />
+          {disabeHideQuotedText ? null : (
+            <QuotedControl html={html} onClick={this.toggleshowQuotedText} />
+          )}
         </div>
       </>
     );

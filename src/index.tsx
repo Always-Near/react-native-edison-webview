@@ -77,8 +77,9 @@ type WithoutProps =
   | "onMessage";
 type EdisonWebViewProps = {
   html: string;
-  isDrakMode?: boolean;
+  isDarkMode?: boolean;
   isPreviewMode?: boolean;
+  disabeHideQuotedText?: boolean;
   onMessage: (type: WebviewEvent, data: any) => void;
 } & Omit<WebViewProps, WithoutProps>;
 
@@ -106,7 +107,8 @@ export default class RNWebView extends Component<
 
   componentDidUpdate(prevProps: EdisonWebViewProps) {
     if (
-      prevProps.isDrakMode !== this.props.isDrakMode ||
+      prevProps.isDarkMode !== this.props.isDarkMode ||
+      prevProps.disabeHideQuotedText !== this.props.disabeHideQuotedText ||
       prevProps.html !== this.props.html
     ) {
       this.initHtml();
@@ -175,7 +177,8 @@ export default class RNWebView extends Component<
       InjectScriptName.SetHTML,
       JSON.stringify({
         html: formatHtmlBase64,
-        isDarkMode: this.props.isDrakMode,
+        isDarkMode: this.props.isDarkMode,
+        disabeHideQuotedText: this.props.disabeHideQuotedText,
       })
     );
   };
@@ -188,7 +191,7 @@ export default class RNWebView extends Component<
         originWhitelist={["*"]}
         source={{ uri: this.state.webviewUri }}
         allowFileAccess
-        forceDarkOn={this.props.isDrakMode}
+        forceDarkOn={this.props.isDarkMode}
         allowingReadAccessToURL={"file://"}
         onMessage={this.onMessage}
       />
