@@ -1,6 +1,6 @@
 class DarkModeUtils {
   private rgbColor = (color: string) => {
-    const reg = /^rgba?\(([\d\s,]*)\)$/gi;
+    const reg = /^rgba?\(([\d\s,\.]*)\)$/gi;
     const test = reg.exec(color);
     const rgba = test ? test[1] : "";
     return rgba.split(",").map((n) => {
