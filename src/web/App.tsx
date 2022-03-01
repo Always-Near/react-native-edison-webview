@@ -38,6 +38,7 @@ type State = {
 class App extends React.Component<any, State> {
   private hasImageInBody: boolean = true;
   private hasAllImageLoad: boolean = false;
+  private ratio = 1;
 
   constructor(props: any) {
     super(props);
@@ -135,15 +136,16 @@ class App extends React.Component<any, State> {
     if (document.fullscreenElement) {
       return;
     }
-    const targetWidth = window.innerWidth;
+
     const container = document.getElementById("edo-container");
     if (!container) {
       return;
     }
-    const calcHeight = Math.ceil(
-      (container.scrollHeight / container.scrollWidth) * targetWidth
+
+    this.postMessage(
+      EventName.HeightChange,
+      container.scrollHeight * this.ratio
     );
-    this.postMessage(EventName.HeightChange, calcHeight);
   };
 
   private onImageLoad = () => {
@@ -263,9 +265,9 @@ class App extends React.Component<any, State> {
     const targetWidth = window.innerWidth;
     const originalWidth = container.scrollWidth;
     if (originalWidth > targetWidth) {
-      const ratio = targetWidth / originalWidth;
+      this.ratio = targetWidth / originalWidth;
       try {
-        ResizeUtil.scaleElement(container, originalWidth, ratio);
+        ResizeUtil.scaleElement(container, originalWidth, this.ratio);
       } catch (err) {
         // pass
       }
@@ -273,7 +275,7 @@ class App extends React.Component<any, State> {
       const sheets = document.styleSheets;
       try {
         for (const sheet of sheets) {
-          ResizeUtil.zoomFontSizeInCss(sheet, 1.0 / ratio);
+          ResizeUtil.zoomFontSizeInCss(sheet, 1.0 / this.ratio);
         }
       } catch (err) {
         // pass
@@ -285,7 +287,7 @@ class App extends React.Component<any, State> {
       try {
         for (const element of fontSizeElements) {
           if (element instanceof HTMLElement) {
-            ResizeUtil.zoomText(element, 1.0 / ratio);
+            ResizeUtil.zoomText(element, 1.0 / this.ratio);
           }
         }
       } catch (err) {
@@ -309,7 +311,7 @@ class App extends React.Component<any, State> {
         // pass
       }
 
-      document.body.style.height = container.offsetHeight * ratio + "px";
+      document.body.style.height = container.offsetHeight * this.ratio + "px";
     }
     this.updateSize("html-reload");
   };
