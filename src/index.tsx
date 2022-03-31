@@ -179,6 +179,7 @@ export default class RNWebView extends Component<
         html: formatHtmlBase64,
         isDarkMode: this.props.isDarkMode,
         disabeHideQuotedText: this.props.disabeHideQuotedText,
+        platform: Platform.OS,
       })
     );
   };

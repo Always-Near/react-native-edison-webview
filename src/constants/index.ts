@@ -4,5 +4,6 @@ export const EventName = {
   OnLoadFinish: "onLoadFinish",
   HeightChange: "heightChange",
   ClickLink: "clickLink",
+  onImageDownload: "onImageDownload",
   Debugger: "debugger",
 } as const;

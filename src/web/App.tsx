@@ -8,6 +8,7 @@ import OversizeUtil from "./utils/oversize";
 import QuotedHTMLTransformer from "./utils/quoted-html-transformer";
 import ResizeUtil from "./utils/samrt-resize";
 import SpecialHandle from "./utils/special-handle";
+import ImageDownload from "./utils/image-download";
 
 const darkModeStyle = `
   html, body.edo, #edo-container {
@@ -31,6 +32,7 @@ type State = {
   hasImgOrVideo: boolean;
   html: string;
   showHtml: string;
+  platform?: "ios" | "android" | "windows" | "macos" | "web";
   disabeHideQuotedText: boolean;
   showQuotedText: boolean;
 };
@@ -86,7 +88,8 @@ class App extends React.Component<any, State> {
 
   private setHTML = (params: string) => {
     try {
-      const { html, isDarkMode, disabeHideQuotedText } = JSON.parse(params);
+      const { html, isDarkMode, disabeHideQuotedText, platform } =
+        JSON.parse(params);
       if (html) {
         const htmlStr = Buffer.from(html, "base64").toString("utf-8");
         // clear the meta to keep style
@@ -103,6 +106,7 @@ class App extends React.Component<any, State> {
           showHtml,
           hasImgOrVideo,
           isDarkMode,
+          platform,
           disabeHideQuotedText,
         });
       }
@@ -240,7 +244,15 @@ class App extends React.Component<any, State> {
 
     images.forEach((ele) => {
       ele.addEventListener("load", this.onImageLoad);
+      if (this.state.platform != "ios") {
+        const ImageDownloadUtil = new ImageDownload(ele, this.onImageDownload);
+        ImageDownloadUtil.addEventListener();
+      }
     });
+  };
+
+  private onImageDownload = (src: string) => {
+    this.postMessage(EventName.onImageDownload, src);
   };
 
   private removeObjectDom = () => {
