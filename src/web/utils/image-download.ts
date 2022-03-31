@@ -1,7 +1,6 @@
-const longPressDuration = 750;
+const longPressDuration = 1000;
 
 let presstimer: number | null = null;
-let longpress = false;
 
 class ImageDownload {
   private node: HTMLImageElement;
@@ -20,41 +19,19 @@ class ImageDownload {
     }
   };
 
-  private click = () => {
+  private start = () => {
     if (presstimer !== null) {
       clearTimeout(presstimer);
-      presstimer = null;
     }
-    if (longpress) {
-      return false;
-    }
-  };
-
-  private start = (e: MouseEvent | TouchEvent) => {
-    if (e.type === "click" && (!("button" in e) || e.button !== 0)) {
-      return;
-    }
-
-    longpress = false;
-
-    if (presstimer === null) {
-      presstimer = setTimeout(() => {
-        this.onLongPressImage();
-        longpress = true;
-      }, longPressDuration);
-    }
-
-    return false;
+    presstimer = setTimeout(() => {
+      this.onLongPressImage();
+    }, longPressDuration);
   };
 
   addEventListener = () => {
-    this.node.addEventListener("mousedown", this.start);
     this.node.addEventListener("touchstart", this.start);
-    this.node.addEventListener("click", this.click);
-    this.node.addEventListener("mouseout", this.cancel);
+    this.node.addEventListener("touchmove", this.cancel);
     this.node.addEventListener("touchend", this.cancel);
-    this.node.addEventListener("touchleave", this.cancel);
-    this.node.addEventListener("touchcancel", this.cancel);
   };
 
   private onLongPressImage = () => {
