@@ -1,3 +1,5 @@
+import { debug } from "webpack";
+
 const longPressDuration = 1000;
 
 let presstimer: number | null = null;
@@ -6,6 +8,7 @@ class ImageDownload {
   private node: HTMLImageElement;
   private src: string;
   private onImageDownload: (src: string) => void;
+
   constructor(image: HTMLImageElement, onImageDownload: (src: string) => void) {
     this.node = image;
     this.src = this.node.src;
@@ -28,16 +31,18 @@ class ImageDownload {
     }, longPressDuration);
   };
 
-  addEventListener = () => {
-    this.node.addEventListener("touchstart", this.start);
-    this.node.addEventListener("touchmove", this.cancel);
-    this.node.addEventListener("touchend", this.cancel);
-  };
-
   private onLongPressImage = () => {
     if (this.src) {
       this.onImageDownload(this.src);
     }
+  };
+
+  addEventListener = () => {
+    this.node.addEventListener("touchstart", this.start);
+    this.node.addEventListener("touchmove", this.cancel);
+    this.node.addEventListener("touchend", this.cancel);
+    this.node.addEventListener("touchleave", this.cancel);
+    this.node.addEventListener("touchcancel", this.cancel);
   };
 }
 
