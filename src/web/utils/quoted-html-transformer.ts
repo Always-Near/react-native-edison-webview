@@ -507,7 +507,7 @@ class QuotedHTMLTransformer {
     }
 
     this.removeImagesStrippedByAnotherClient(doc);
-    this.removeUnnecessaryWhitespace(doc);
+    // this.removeUnnecessaryWhitespace(doc);
     return this.outputHTMLFor(doc, html);
   }
 }
