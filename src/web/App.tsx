@@ -93,8 +93,13 @@ class App extends React.Component<any, State> {
       if (html) {
         const htmlStr = Buffer.from(html, "base64").toString("utf-8");
         // clear the meta to keep style
-        const reg = /<meta\s+name=(['"\s]?)viewport\1\s+content=[^>]*>/gi;
-        const formatHTML = htmlStr.replace(reg, "");
+        const regMeta = /<meta\s+name=(['"\s]?)viewport\1\s+content=[^>]*>/gi;
+        // clear @media for orientation: landscape
+        const regOrientation =
+          /@media screen and [:()\s\w-]*\(orientation: landscape\)/g;
+        const formatHTML = htmlStr
+          .replace(regMeta, "")
+          .replace(regOrientation, "");
         const hasImgOrVideo = this.calcHasImgOrVideo(formatHTML);
         const { showQuotedText } = this.state;
         const showHtml =
