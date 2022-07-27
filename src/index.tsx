@@ -77,6 +77,7 @@ type WithoutProps =
   | "onMessage";
 type EdisonWebViewProps = {
   html: string;
+  imageProxyTemplate: string;
   isDarkMode?: boolean;
   isPreviewMode?: boolean;
   disabeHideQuotedText?: boolean;
@@ -109,7 +110,8 @@ export default class RNWebView extends Component<
     if (
       prevProps.isDarkMode !== this.props.isDarkMode ||
       prevProps.disabeHideQuotedText !== this.props.disabeHideQuotedText ||
-      prevProps.html !== this.props.html
+      prevProps.html !== this.props.html ||
+      prevProps.imageProxyTemplate !== this.props.imageProxyTemplate
     ) {
       this.initHtml();
     }
@@ -177,6 +179,7 @@ export default class RNWebView extends Component<
       InjectScriptName.SetHTML,
       JSON.stringify({
         html: formatHtmlBase64,
+        imageProxyTemplate: this.props.imageProxyTemplate,
         isDarkMode: this.props.isDarkMode,
         disabeHideQuotedText: this.props.disabeHideQuotedText,
         platform: Platform.OS,

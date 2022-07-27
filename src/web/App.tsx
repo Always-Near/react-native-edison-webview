@@ -4,11 +4,12 @@ import { EventName } from "../constants";
 import QuotedControl from "./components/QuotedControl";
 import "./styles";
 import DarkModeUtil from "./utils/dark-mode";
+import ImageDownload from "./utils/image-download";
+import { addProxyForImage, handleImageLoadError } from "./utils/image-proxy";
 import OversizeUtil from "./utils/oversize";
 import QuotedHTMLTransformer from "./utils/quoted-html-transformer";
 import ResizeUtil from "./utils/samrt-resize";
 import SpecialHandle from "./utils/special-handle";
-import ImageDownload from "./utils/image-download";
 
 const darkModeStyle = `
   html, body.edo, #edo-container {
@@ -88,8 +89,13 @@ class App extends React.Component<any, State> {
 
   private setHTML = (params: string) => {
     try {
-      const { html, isDarkMode, disabeHideQuotedText, platform } =
-        JSON.parse(params);
+      const {
+        html,
+        imageProxyTemplate,
+        isDarkMode,
+        disabeHideQuotedText,
+        platform,
+      } = JSON.parse(params);
       if (html) {
         const htmlStr = Buffer.from(html, "base64").toString("utf-8");
         // clear the meta to keep style
@@ -100,14 +106,17 @@ class App extends React.Component<any, State> {
         const formatHTML = htmlStr
           .replace(regMeta, "")
           .replace(regOrientation, "");
-        const hasImgOrVideo = this.calcHasImgOrVideo(formatHTML);
+        const { hasImgOrVideo, html: addImageProxyHtml } = addProxyForImage(
+          formatHTML,
+          imageProxyTemplate
+        );
         const { showQuotedText } = this.state;
         const showHtml =
           showQuotedText || disabeHideQuotedText
-            ? formatHTML
-            : QuotedHTMLTransformer.removeQuotedHTML(formatHTML);
+            ? addImageProxyHtml
+            : QuotedHTMLTransformer.removeQuotedHTML(addImageProxyHtml);
         this.setState({
-          html: formatHTML,
+          html: addImageProxyHtml,
           showHtml,
           hasImgOrVideo,
           isDarkMode,
@@ -122,20 +131,6 @@ class App extends React.Component<any, State> {
 
   private setPreviewMode = (isPreviewMode: string) => {
     this.setState({ isPreviewMode: isPreviewMode === String(true) });
-  };
-
-  private calcHasImgOrVideo = (html: string) => {
-    const box = document.createElement("div");
-    box.innerHTML = html;
-    const image = box.querySelector("img");
-    if (image) {
-      return true;
-    }
-    const video = box.querySelector("video");
-    if (video) {
-      return true;
-    }
-    return false;
   };
 
   private updateSize = (info = "") => {
@@ -248,7 +243,11 @@ class App extends React.Component<any, State> {
     this.hasImageInBody = images.length > 0;
 
     images.forEach((ele) => {
+      // add load event to update webview size
       ele.addEventListener("load", this.onImageLoad);
+      // add load error event to reset src
+      ele.addEventListener("error", () => handleImageLoadError(ele));
+      // add longPress event to download image
       if (this.state.platform != "ios") {
         const ImageDownloadUtil = new ImageDownload(ele, this.onImageDownload);
         ImageDownloadUtil.addEventListener();
