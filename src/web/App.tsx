@@ -11,16 +11,16 @@ import QuotedHTMLTransformer from "./utils/quoted-html-transformer";
 import ResizeUtil from "./utils/samrt-resize";
 import SpecialHandle from "./utils/special-handle";
 
-const darkModeStyle = `
+const darkModeStyle = (isPreviewMode: boolean) => `
   html, body.edo, #edo-container {
-    background-color: #121212 !important;
+    background-color: ${isPreviewMode ? "#1c1c1c" : "#121212"} !important;
   }
   body {
     color: #fff;
   }
 `;
 
-const lightModeStyle = `
+const lightModeStyle = () => `
   html, body.edo, #edo-container {
     background-color: #fffffe !important;
   }
@@ -403,7 +403,9 @@ class App extends React.Component<any, State> {
       isPreviewMode && !hasImgOrVideo ? { padding: "2ex" } : {};
     return (
       <>
-        <style>{isDarkMode ? darkModeStyle : lightModeStyle}</style>
+        <style>
+          {isDarkMode ? darkModeStyle(isPreviewMode) : lightModeStyle()}
+        </style>
 
         <div style={containerStyles}>
           <div dangerouslySetInnerHTML={{ __html: showHtml }}></div>
