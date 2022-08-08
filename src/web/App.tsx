@@ -13,7 +13,7 @@ import SpecialHandle from "./utils/special-handle";
 
 const darkModeStyle = (isPreviewMode: boolean) => `
   html, body.edo, #edo-container {
-    background-color: ${isPreviewMode ? "#1c1c1c" : "#121212"} !important;
+    background-color: ${isPreviewMode ? "#252525" : "#121212"} !important;
   }
   body {
     color: #fff;
