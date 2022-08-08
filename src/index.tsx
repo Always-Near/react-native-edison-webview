@@ -13,7 +13,6 @@ const packageName = "react-native-edison-webview";
 
 const InjectScriptName = {
   SetHTML: "setHTML",
-  SetPreviewMode: "setPreviewMode",
 } as const;
 
 const messageBodyFileTargetPath = `file://${RNFS.CachesDirectoryPath}/messageBody.html`;
@@ -109,17 +108,12 @@ export default class RNWebView extends Component<
   componentDidUpdate(prevProps: EdisonWebViewProps) {
     if (
       prevProps.isDarkMode !== this.props.isDarkMode ||
+      prevProps.isPreviewMode !== this.props.isPreviewMode ||
       prevProps.disabeHideQuotedText !== this.props.disabeHideQuotedText ||
       prevProps.html !== this.props.html ||
       prevProps.imageProxyTemplate !== this.props.imageProxyTemplate
     ) {
       this.initHtml();
-    }
-    if (prevProps.isPreviewMode !== this.props.isPreviewMode) {
-      this.executeScript(
-        InjectScriptName.SetPreviewMode,
-        String(!!this.props.isPreviewMode)
-      );
     }
   }
 
@@ -159,10 +153,6 @@ export default class RNWebView extends Component<
       if (messageData.type === EventName.IsMounted) {
         this.webviewMounted = true;
         this.initHtml();
-        this.executeScript(
-          InjectScriptName.SetPreviewMode,
-          String(!!this.props.isPreviewMode)
-        );
       } else if (this.props.onMessage) {
         this.props.onMessage(messageData.type, messageData.data);
       }
@@ -181,6 +171,7 @@ export default class RNWebView extends Component<
         html: formatHtmlBase64,
         imageProxyTemplate: this.props.imageProxyTemplate || "",
         isDarkMode: this.props.isDarkMode,
+        isPreviewMode: this.props.isPreviewMode,
         disabeHideQuotedText: this.props.disabeHideQuotedText,
         platform: Platform.OS,
       })

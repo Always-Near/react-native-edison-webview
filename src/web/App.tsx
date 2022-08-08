@@ -67,7 +67,6 @@ class App extends React.Component<any, State> {
 
   componentDidMount() {
     window.setHTML = this.setHTML;
-    window.setPreviewMode = this.setPreviewMode;
 
     window.addEventListener("resize", () => {
       this.updateSize("window-resize");
@@ -101,7 +100,8 @@ class App extends React.Component<any, State> {
       const {
         html,
         imageProxyTemplate,
-        isDarkMode,
+        isDarkMode = false,
+        isPreviewMode = false,
         disabeHideQuotedText,
         platform,
       } = JSON.parse(params);
@@ -129,6 +129,7 @@ class App extends React.Component<any, State> {
           showHtml,
           hasImgOrVideo,
           isDarkMode,
+          isPreviewMode,
           platform,
           disabeHideQuotedText,
         });
@@ -136,10 +137,6 @@ class App extends React.Component<any, State> {
     } catch (e) {
       console.error(e);
     }
-  };
-
-  private setPreviewMode = (isPreviewMode: string) => {
-    this.setState({ isPreviewMode: isPreviewMode === String(true) });
   };
 
   private updateSize = (info = "") => {
