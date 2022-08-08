@@ -11,9 +11,18 @@ import QuotedHTMLTransformer from "./utils/quoted-html-transformer";
 import ResizeUtil from "./utils/samrt-resize";
 import SpecialHandle from "./utils/special-handle";
 
+const BackgroundBaseColorForDark = {
+  PreviewMode: "rgb(37,37,37)",
+  DetailMode: "rgb(18,18,18)",
+} as const;
+
 const darkModeStyle = (isPreviewMode: boolean) => `
   html, body.edo, #edo-container {
-    background-color: ${isPreviewMode ? "#252525" : "#121212"} !important;
+    background-color: ${
+      isPreviewMode
+        ? BackgroundBaseColorForDark.PreviewMode
+        : BackgroundBaseColorForDark.DetailMode
+    } !important;
   }
   body {
     color: #fff;
@@ -175,16 +184,22 @@ class App extends React.Component<any, State> {
   };
 
   private applyDarkMode = () => {
+    const { isPreviewMode } = this.state;
     try {
       const container = document.getElementById("edo-container");
       if (!container) {
         return;
       }
+      const baseBackground = DarkModeUtil.rgbColor(
+        isPreviewMode
+          ? BackgroundBaseColorForDark.PreviewMode
+          : BackgroundBaseColorForDark.DetailMode
+      );
       Array.from(container.querySelectorAll("*"))
         .reverse()
         .forEach((node) => {
           if (node instanceof HTMLElement) {
-            DarkModeUtil.applyDarkModeForNode(node);
+            DarkModeUtil.applyDarkModeForNode(node, baseBackground);
           }
         });
     } catch (err) {

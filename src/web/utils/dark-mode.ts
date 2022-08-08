@@ -1,5 +1,5 @@
 class DarkModeUtils {
-  private rgbColor = (color: string) => {
+  rgbColor = (color: string) => {
     const reg = /^rgba?\(([\d\s,\.]*)\)$/gi;
     const test = reg.exec(color);
     const rgba = test ? test[1] : "";
@@ -13,7 +13,8 @@ class DarkModeUtils {
     r: number,
     g: number,
     b: number,
-    key: "color" | "backgroundColor"
+    key: "color" | "backgroundColor",
+    baseBackground: number[]
   ) => {
     const isBackground = key === "backgroundColor";
     //if color is dark or bright (http://alienryderflex.com/hsp.html)
@@ -26,10 +27,11 @@ class DarkModeUtils {
       const nb = Math.min(b + delta, 234);
       return `rgb(${nr},${ng},${nb})`;
     } else if (hsp > 200 && isBackground) {
+      const [baseR, baseG, baseB] = baseBackground;
       //bg color brighter than #cccccc
-      const nr = Math.max(r - hsp, 27);
-      const ng = Math.max(g - hsp, 28);
-      const nb = Math.max(b - hsp, 30);
+      const nr = Math.max(r - hsp, baseR || 27);
+      const ng = Math.max(g - hsp, baseG || 28);
+      const nb = Math.max(b - hsp, baseB || 30);
       return `rgb(${nr},${ng},${nb})`;
     } else {
       return this.desatruate(r, g, b);
@@ -45,7 +47,7 @@ class DarkModeUtils {
     return `rgb(${nr},${ng},${nb})`;
   };
 
-  applyDarkModeForNode = (node: HTMLElement) => {
+  applyDarkModeForNode = (node: HTMLElement, baseBackground: number[]) => {
     const style = window.getComputedStyle(node, null);
     const color = style.color;
     if (color) {
@@ -54,7 +56,7 @@ class DarkModeUtils {
         // not transparent
         node.style.setProperty(
           "color",
-          this.reversedColor(r, g, b, "color"),
+          this.reversedColor(r, g, b, "color", baseBackground),
           "important"
         );
       }
@@ -66,7 +68,7 @@ class DarkModeUtils {
         // not transparent
         node.style.setProperty(
           "background-color",
-          this.reversedColor(r, g, b, "backgroundColor"),
+          this.reversedColor(r, g, b, "backgroundColor", baseBackground),
           "important"
         );
       }
