@@ -81,7 +81,6 @@ class App {
     window.addEventListener("resize", () => {
       this.updateSize("window-resize");
     });
-    this.render();
     const quotedControlNode = document.querySelector("#quoted-btn");
     if (quotedControlNode) {
       quotedControlNode.addEventListener("click", this.toggleshowQuotedText);
