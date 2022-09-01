@@ -8,12 +8,12 @@ module.exports = {
     path: config.outputPath,
   },
   resolve: {
-    extensions: [".js", ".json", ".jsx", ".ts", ".tsx", ".less", ".css"],
+    extensions: [".js", ".json", ".ts", ".less", ".css"],
   },
   module: {
     rules: [
       {
-        test: /\.((j|t)sx?)$/,
+        test: /\.((j|t)s)$/,
         exclude: /node_modules/,
         use: [
           {

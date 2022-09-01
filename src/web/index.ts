@@ -1,7 +1,5 @@
 import { Buffer } from "buffer";
-import React from "react";
 import { EventName } from "../constants";
-import QuotedControl from "./components/QuotedControl";
 import "./styles";
 import DarkModeUtil from "./utils/dark-mode";
 import ImageDownload from "./utils/image-download";
@@ -10,6 +8,19 @@ import OversizeUtil from "./utils/oversize";
 import QuotedHTMLTransformer from "./utils/quoted-html-transformer";
 import ResizeUtil from "./utils/samrt-resize";
 import SpecialHandle from "./utils/special-handle";
+
+function debounce<T extends Array<any>>(
+  fn: (...args: T) => void,
+  delay: number
+) {
+  let timer: number | null = null; //借助闭包
+  return function (...args: T) {
+    if (timer) {
+      clearTimeout(timer);
+    }
+    timer = setTimeout(() => fn(...args), delay);
+  };
+}
 
 const BackgroundBaseColorForDark = {
   PreviewMode: "rgb(37,37,37)",
@@ -35,7 +46,10 @@ const lightModeStyle = () => `
   }
 `;
 
+export {};
+
 type EventType = typeof EventName[keyof typeof EventName];
+
 type State = {
   isDarkMode: boolean;
   isPreviewMode: boolean;
@@ -47,41 +61,32 @@ type State = {
   showQuotedText: boolean;
 };
 
-class App extends React.Component<any, State> {
+class App {
   private hasImageInBody: boolean = true;
   private hasAllImageLoad: boolean = false;
   private ratio = 1;
+  private state: State = {
+    isDarkMode: false,
+    isPreviewMode: false,
+    hasImgOrVideo: false,
+    html: "",
+    showHtml: "",
+    disabeHideQuotedText: false,
+    showQuotedText: false,
+  };
 
-  constructor(props: any) {
-    super(props);
-    this.state = {
-      isDarkMode: false,
-      isPreviewMode: false,
-      hasImgOrVideo: false,
-      html: "",
-      showHtml: "",
-      disabeHideQuotedText: false,
-      showQuotedText: false,
-    };
-  }
-
-  componentDidMount() {
+  constructor() {
     window.setHTML = this.setHTML;
 
     window.addEventListener("resize", () => {
       this.updateSize("window-resize");
     });
-    this.postMessage(EventName.IsMounted, true);
-  }
-
-  componentDidUpdate(preProps: any, preState: State) {
-    if (
-      preState.showHtml !== this.state.showHtml ||
-      preState.isDarkMode !== this.state.isDarkMode ||
-      preState.isPreviewMode !== this.state.isPreviewMode
-    ) {
-      this.onContentChange();
+    this.render();
+    const quotedControlNode = document.querySelector("#quoted-btn");
+    if (quotedControlNode) {
+      quotedControlNode.addEventListener("click", this.toggleshowQuotedText);
     }
+    this.postMessage(EventName.IsMounted, true);
   }
 
   private postMessage = (type: EventType, data: any) => {
@@ -360,6 +365,42 @@ class App extends React.Component<any, State> {
     }
   };
 
+  private onload = () => {
+    this.postMessage(EventName.OnLoad, true);
+  };
+
+  private debounceOnload = debounce(this.onload, 300);
+
+  private toggleshowQuotedText = () => {
+    const { html, showQuotedText, disabeHideQuotedText } = this.state;
+    const nextShowQuotedText = !showQuotedText;
+    const showHtml =
+      nextShowQuotedText || disabeHideQuotedText
+        ? html
+        : QuotedHTMLTransformer.removeQuotedHTML(html);
+    this.setState({
+      showQuotedText: nextShowQuotedText,
+      showHtml,
+    });
+  };
+
+  private setState = <K extends keyof State>(state: Pick<State, K> | State) => {
+    const preState = Object.assign({}, this.state);
+    const nextState = Object.assign({}, this.state);
+    Object.keys(state).forEach((key) => {
+      nextState[key as K] = state[key as K] as State[K];
+    });
+    this.state = nextState;
+    this.render();
+    if (
+      preState.showHtml !== nextState.showHtml ||
+      preState.isDarkMode !== nextState.isDarkMode ||
+      preState.isPreviewMode !== nextState.isPreviewMode
+    ) {
+      this.onContentChange();
+    }
+  };
+
   private onContentChange = () => {
     if (this.state.isDarkMode) {
       this.applyDarkMode();
@@ -383,25 +424,6 @@ class App extends React.Component<any, State> {
     }
   };
 
-  private onload = () => {
-    this.postMessage(EventName.OnLoad, true);
-  };
-
-  private debounceOnload = debounce(this.onload, 300);
-
-  private toggleshowQuotedText = () => {
-    const { html, showQuotedText, disabeHideQuotedText } = this.state;
-    const nextShowQuotedText = !showQuotedText;
-    const showHtml =
-      nextShowQuotedText || disabeHideQuotedText
-        ? html
-        : QuotedHTMLTransformer.removeQuotedHTML(html);
-    this.setState({
-      showQuotedText: nextShowQuotedText,
-      showHtml,
-    });
-  };
-
   render() {
     const {
       html,
@@ -411,36 +433,41 @@ class App extends React.Component<any, State> {
       isPreviewMode,
       hasImgOrVideo,
     } = this.state;
-    const containerStyles: React.CSSProperties =
-      isPreviewMode && !hasImgOrVideo ? { padding: "2ex" } : {};
-    return (
-      <>
-        <style>
-          {isDarkMode ? darkModeStyle(isPreviewMode) : lightModeStyle()}
-        </style>
 
-        <div style={containerStyles}>
-          <div dangerouslySetInnerHTML={{ __html: showHtml }}></div>
-          {disabeHideQuotedText ? null : (
-            <QuotedControl html={html} onClick={this.toggleshowQuotedText} />
-          )}
-        </div>
-      </>
-    );
+    const globalStyleNode = document.querySelector(".global-style");
+    if (globalStyleNode) {
+      const globalStyle = isDarkMode
+        ? darkModeStyle(isPreviewMode)
+        : lightModeStyle();
+      globalStyleNode.innerHTML = globalStyle || "";
+    }
+
+    const containerNode = document.querySelector("#container");
+    if (containerNode) {
+      const showPadding = isPreviewMode && !hasImgOrVideo;
+      if (showPadding) {
+        containerNode.classList.add("padding");
+      } else {
+        containerNode.classList.remove("padding");
+      }
+    }
+
+    const bodyNode = document.querySelector("#body");
+    if (bodyNode) {
+      bodyNode.innerHTML = showHtml;
+    }
+
+    const quotedControlNode = document.querySelector("#quoted-btn");
+    if (quotedControlNode) {
+      const showQuotedControl =
+        !disabeHideQuotedText && QuotedHTMLTransformer.hasQuotedHTML(html);
+      if (showQuotedControl) {
+        quotedControlNode.classList.remove("hidden");
+      } else {
+        quotedControlNode.classList.add("hidden");
+      }
+    }
   }
 }
 
-function debounce<T extends Array<any>>(
-  fn: (...args: T) => void,
-  delay: number
-) {
-  let timer: number | null = null; //借助闭包
-  return function (...args: T) {
-    if (timer) {
-      clearTimeout(timer);
-    }
-    timer = setTimeout(() => fn(...args), delay);
-  };
-}
-
-export default App;
+window.onload = () => new App();
