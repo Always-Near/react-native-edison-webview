@@ -8,8 +8,9 @@ import ImageDownload from "./utils/image-download";
 import { addProxyForImage, handleImageLoadError } from "./utils/image-proxy";
 import OversizeUtil from "./utils/oversize";
 import QuotedHTMLTransformer from "./utils/quoted-html-transformer";
-import ResizeUtil from "./utils/samrt-resize";
+import ResizeUtil from "./utils/smart-resize";
 import SpecialHandle from "./utils/special-handle";
+import { autolink } from "./utils/auto-link";
 
 const BackgroundBaseColorForDark = {
   PreviewMode: "rgb(37,37,37)",
@@ -364,6 +365,7 @@ class App extends React.Component<any, State> {
     if (this.state.isDarkMode) {
       this.applyDarkMode();
     }
+    autolink();
     this.addEventListenerForLink();
     this.addEventListenerForImage();
     this.removeObjectDom();
