@@ -20,6 +20,9 @@ xmp {
   box-sizing: border-box;
   overflow-x: auto;
   overflow-y: hidden;
+  // ON-4154: Long words affect the width of Image
+  // Allow long words to be able to break and wrap onto the next line
+  word-break: break-word;
 
   span {
     white-space: normal;
