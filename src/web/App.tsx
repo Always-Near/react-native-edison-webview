@@ -159,12 +159,17 @@ class App extends React.Component<any, State> {
     );
   };
 
-  private onImageLoad = () => {
+  private onImageLoad = (ele: HTMLImageElement) => {
     this.updateSize("image-load");
     const container = document.getElementById("edo-container");
     if (!container) {
       return;
     }
+
+    if (ele.width > container.offsetWidth) {
+      ele.classList.add("edo-limit-width");
+    }
+
     if (
       Array.from(container.querySelectorAll("img")).every((el) => {
         return el.complete;
@@ -257,7 +262,7 @@ class App extends React.Component<any, State> {
 
     images.forEach((ele) => {
       // add load event to update webview size
-      ele.addEventListener("load", this.onImageLoad);
+      ele.addEventListener("load", () => this.onImageLoad(ele));
       // add load error event to reset src
       ele.addEventListener("error", () => handleImageLoadError(ele));
       // add longPress event to download image
