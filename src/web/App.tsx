@@ -36,6 +36,12 @@ const lightModeStyle = () => `
   }
 `;
 
+const previewModeStyle = () => `
+  html #edo-container {
+    overflow-x: hidden;
+  }
+`;
+
 type EventType = typeof EventName[keyof typeof EventName];
 type State = {
   isDarkMode: boolean;
@@ -424,6 +430,7 @@ class App extends React.Component<any, State> {
       <>
         <style>
           {isDarkMode ? darkModeStyle(isPreviewMode) : lightModeStyle()}
+          {isPreviewMode ? previewModeStyle() : ""}
         </style>
 
         <div style={containerStyles}>
