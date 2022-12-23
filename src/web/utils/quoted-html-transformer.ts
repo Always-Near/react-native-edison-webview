@@ -323,13 +323,23 @@ class QuotedHTMLTransformer {
     if (!doc.body) {
       doc = this.parseHTML("");
     }
+
+    // to keep styles in head for email
+    let styleStr = "";
+    if (doc.head) {
+      const styles = doc.head.querySelectorAll("style");
+      styles.forEach((s) => {
+        styleStr += `<style type="text/css">${s.innerHTML}</style>`;
+      });
+    }
+
     if (
       /<\s?head\s?>/i.test(initialHTML) ||
       /<\s?body[\s>]/i.test(initialHTML)
     ) {
-      return doc.children[0].innerHTML;
+      return styleStr + doc.children[0].innerHTML;
     }
-    return doc.body.innerHTML;
+    return styleStr + doc.body.innerHTML;
   }
 
   private quoteStringDetector = (doc: Document) => {
