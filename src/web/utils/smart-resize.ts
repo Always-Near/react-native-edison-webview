@@ -51,7 +51,7 @@ class SmartResize {
 
     const numS = parseFloat(s);
 
-    if (numS != NaN && unit) {
+    if (!Number.isNaN(numS) && unit) {
       if (formatMax) {
         newSize = Math.min(numS, max) * scale + unit;
       } else {

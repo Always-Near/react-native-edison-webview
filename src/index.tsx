@@ -113,7 +113,9 @@ export default class RNWebView extends Component<
       prevProps.html !== this.props.html ||
       prevProps.imageProxyTemplate !== this.props.imageProxyTemplate
     ) {
-      this.initHtml();
+      if (this.webviewMounted) {
+        this.initHtml();
+      }
     }
   }
 
