@@ -1,4 +1,3 @@
-import { Buffer } from "buffer";
 import React from "react";
 import { EventName } from "../constants";
 import QuotedControl from "./components/QuotedControl";
@@ -113,7 +112,7 @@ class App extends React.Component<any, State> {
         platform,
       } = JSON.parse(params);
       if (html) {
-        const htmlStr = Buffer.from(html, "base64").toString("utf-8");
+        const htmlStr = decodeURIComponent(html);
         // clear the meta to keep style
         const regMeta = /<meta\s+name=(['"\s]?)viewport\1\s+content=[^>]*>/gi;
         // clear @media for orientation: landscape

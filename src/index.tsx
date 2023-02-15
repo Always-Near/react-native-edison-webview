@@ -1,4 +1,3 @@
-import { Buffer } from "buffer";
 import React, { Component, createRef } from "react";
 import { Platform } from "react-native";
 import RNFS from "react-native-fs";
@@ -141,7 +140,7 @@ export default class RNWebView extends Component<
     }
     this.webViewRef.current.injectJavaScript(
       `window.${functionName} && window.${functionName}(${
-        parameter ? `'${parameter}'` : ""
+        parameter ? `\`${parameter}\`` : ""
       });true;`
     );
   };
@@ -164,9 +163,7 @@ export default class RNWebView extends Component<
   };
 
   private initHtml = () => {
-    const formatHtmlBase64 = Buffer.from(this.props.html, "utf-8").toString(
-      "base64"
-    );
+    const formatHtmlBase64 = encodeURIComponent(this.props.html);
     this.executeScript(
       InjectScriptName.SetHTML,
       JSON.stringify({
