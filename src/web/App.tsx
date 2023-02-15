@@ -57,6 +57,7 @@ class App extends React.Component<any, State> {
   private hasImageInBody: boolean = true;
   private hasAllImageLoad: boolean = false;
   private ratio = 1;
+  private windowInnerWidth = 0;
 
   constructor(props: any) {
     super(props);
@@ -72,11 +73,11 @@ class App extends React.Component<any, State> {
   }
 
   componentDidMount() {
-    window.setHTML = this.setHTML;
+    this.windowInnerWidth = window.innerWidth;
 
-    window.addEventListener("resize", () => {
-      this.updateSize("window-resize");
-    });
+    window.setHTML = this.setHTML;
+    window.addEventListener("resize", this.onWindowResize);
+
     this.postMessage(EventName.IsMounted, true);
   }
 
@@ -181,6 +182,15 @@ class App extends React.Component<any, State> {
       })
     ) {
       this.onAllImageLoad();
+    }
+  };
+
+  private onWindowResize = () => {
+    if (this.windowInnerWidth != window.innerWidth && this.ratio != 1) {
+      location.reload();
+    } else {
+      this.windowInnerWidth = window.innerWidth;
+      this.updateSize("window-resize");
     }
   };
 
