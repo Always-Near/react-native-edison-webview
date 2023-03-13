@@ -22,7 +22,7 @@ class QuotedHTMLTransformer {
     let doc;
     try {
       doc = domParser.parseFromString(html, "text/html");
-    } catch (error) {
+    } catch (error: any) {
       const errText = `HTML Parser Error: ${error.toString()}`;
       doc = domParser.parseFromString(errText, "text/html");
       console.error(error.message);
@@ -96,6 +96,16 @@ class QuotedHTMLTransformer {
     el: Element,
     quoteElements: Node[]
   ) => {
+    // ON-4509: Incorrectly displayed cited emails
+    if (
+      el &&
+      el.className === "gmail_quote" &&
+      el.parentElement &&
+      el.parentElement.nodeName === "BODY"
+    ) {
+      return false;
+    }
+
     const seen: Node[] = [];
     let head: Node | null = el;
 
