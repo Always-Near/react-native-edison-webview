@@ -41,7 +41,7 @@ const previewModeStyle = () => `
   }
 `;
 
-type EventType = typeof EventName[keyof typeof EventName];
+type EventType = (typeof EventName)[keyof typeof EventName];
 type State = {
   isDarkMode: boolean;
   isPreviewMode: boolean;
@@ -268,7 +268,7 @@ class App extends React.Component<any, State> {
     Array.from(container.querySelectorAll("a")).forEach((ele) => {
       ele.addEventListener("click", (e) => {
         e.preventDefault();
-        this.postMessage(EventName.ClickLink, ele.href);
+        this.postMessage(EventName.ClickLink, ele.getAttribute("href"));
       });
     });
   };
