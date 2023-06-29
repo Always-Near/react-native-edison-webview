@@ -87,7 +87,7 @@ class App extends React.Component<any, State> {
       preState.isDarkMode !== this.state.isDarkMode ||
       preState.isPreviewMode !== this.state.isPreviewMode
     ) {
-      this.onContentChange();
+      this.debounceOnContentChange();
     }
   }
 
@@ -323,7 +323,14 @@ class App extends React.Component<any, State> {
     if (originalWidth > targetWidth) {
       this.ratio = targetWidth / originalWidth;
       try {
-        ResizeUtil.scaleElement(container, originalWidth, this.ratio);
+        ResizeUtil.scaleContent(container, originalWidth, this.ratio);
+        const quotedControl = document.querySelector(".quoted-btn svg");
+        if (quotedControl) {
+          ResizeUtil.scaleQuotedControl(
+            quotedControl as HTMLElement,
+            this.ratio
+          );
+        }
       } catch (err) {
         // pass
       }
@@ -411,6 +418,8 @@ class App extends React.Component<any, State> {
       this.onAllImageLoad();
     }
   };
+
+  private debounceOnContentChange = debounce(this.onContentChange, 300);
 
   private onload = () => {
     this.postMessage(EventName.OnLoad, true);
