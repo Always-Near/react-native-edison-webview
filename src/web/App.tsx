@@ -205,6 +205,7 @@ class App extends React.Component<any, State> {
     if (!this.hasAllImageLoad) {
       this.hasAllImageLoad = true;
       this.postMessage(EventName.OnLoadFinish, true);
+      this.debounceOnContentChange();
     }
   };
 
