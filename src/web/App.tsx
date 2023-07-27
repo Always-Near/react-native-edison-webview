@@ -58,6 +58,8 @@ class App extends React.Component<any, State> {
   private hasAllImageLoad: boolean = false;
   private ratio = 1;
   private windowInnerWidth = 0;
+  private viewportScale = false;
+  private viewportScrollEnd = false;
 
   constructor(props: any) {
     super(props);
@@ -77,6 +79,10 @@ class App extends React.Component<any, State> {
 
     window.setHTML = this.setHTML;
     window.addEventListener("resize", this.onWindowResize);
+    if (this.state.platform != "ios") {
+      window.visualViewport?.addEventListener("resize", this.onResizeViewport);
+      window.visualViewport?.addEventListener("scroll", this.onScrollViewport);
+    }
 
     this.postMessage(EventName.IsMounted, true);
   }
@@ -198,6 +204,32 @@ class App extends React.Component<any, State> {
       this.windowInnerWidth = window.innerWidth;
 
       this.updateSize("window-resize");
+    }
+  };
+
+  private onResizeViewport = () => {
+    if (!window.visualViewport) {
+      return;
+    }
+    const newScale = window.visualViewport.scale > 1;
+    if (newScale !== this.viewportScale) {
+      this.postMessage(EventName.ResizeViewport, newScale);
+      this.viewportScale = newScale;
+    }
+  };
+
+  private onScrollViewport = () => {
+    if (!window.visualViewport) {
+      return;
+    }
+    const newViewportScrollEnd =
+      window.visualViewport.offsetTop <= 0 ||
+      window.visualViewport.height * (window.visualViewport.scale - 1) -
+        window.visualViewport.offsetTop <=
+        1;
+    if (newViewportScrollEnd !== this.viewportScrollEnd) {
+      this.viewportScrollEnd = newViewportScrollEnd;
+      this.postMessage(EventName.OnScrollEndViewport, newViewportScrollEnd);
     }
   };
 
