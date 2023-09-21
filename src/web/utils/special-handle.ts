@@ -30,6 +30,10 @@ class SpecialHandle {
       node.parentNode?.removeChild(node);
     }
   };
+
+  disableContentEditableElements = (node: HTMLElement) => {
+    node.contentEditable = "false";
+  };
 }
 
 export default new SpecialHandle();

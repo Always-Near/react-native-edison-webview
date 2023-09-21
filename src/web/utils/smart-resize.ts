@@ -62,20 +62,187 @@ class SmartResize {
     return newSize;
   }
 
-  private isRelativeFontSize = (s: string) => {
-    if (!s) {
-      return false;
+  private preOrderTraverse = (element: HTMLElement) => {
+    const nodeList: HTMLElement[] = [];
+    let nodeTmp = element.firstChild;
+    while (nodeTmp) {
+      if (nodeTmp instanceof HTMLElement) {
+        nodeList.push(nodeTmp, ...this.preOrderTraverse(nodeTmp));
+      }
+      nodeTmp = nodeTmp.nextSibling;
     }
-    return (
-      s.endsWith("em") ||
-      s.endsWith("rem") ||
-      s.endsWith("ch") ||
-      s.endsWith("vw") ||
-      s.endsWith("%")
-    );
+    return nodeList;
   };
 
-  scaleContent = (element: HTMLElement, fromWidth: number, scale: number) => {
+  private filterElementsThatNeedAdjust = (
+    element: HTMLElement,
+    scale: number
+  ) => {
+    const elementList = this.preOrderTraverse(element) as HTMLElement[];
+    const filterNodeList: {
+      element: HTMLElement;
+      styleProp: "fontSize" | "lineHeight";
+      value: string;
+      originalValue: string;
+    }[] = [];
+
+    for (const el of elementList) {
+      const hasFontSize =
+        (el.style && el.style["fontSize"]) || el.getAttribute("size");
+      const hasLineHeight = el.style && el.style["lineHeight"];
+
+      if (hasFontSize || hasLineHeight) {
+        const styleProp = hasFontSize ? "fontSize" : "lineHeight";
+        let value = "0";
+        if (document.defaultView && document.defaultView.getComputedStyle) {
+          const style = document.defaultView.getComputedStyle(el, null);
+          if (style) {
+            value = style[styleProp] || style.getPropertyValue(styleProp) || "";
+          }
+        }
+        filterNodeList.push({
+          element: el,
+          styleProp,
+          value: parseInt(value, 10) * scale + "px",
+          originalValue: value,
+        });
+      }
+    }
+
+    return filterNodeList;
+  };
+
+  private zoomFontSizeInCss = (scale: number) => {
+    const sheets = document.styleSheets;
+
+    const max = 17;
+    const resetStylesInCss: Array<[CSSStyleDeclaration, string, string]> = [];
+
+    try {
+      for (const sheet of sheets) {
+        const rules = this.getCssRules(sheet);
+        for (const rule of rules) {
+          const style = rule.style;
+          if (style && style.fontSize) {
+            if (parseInt(style.fontSize) < max * scale) {
+              const size = this.zoomedSize(style.fontSize, scale, max);
+              if (size) {
+                resetStylesInCss.push([style, "font-size", style.fontSize]);
+                this.updateStyle(style, "font-size", size);
+              }
+            }
+          }
+          if (style && style.lineHeight) {
+            const size = this.zoomedSize(style.lineHeight, scale);
+            if (size) {
+              resetStylesInCss.push([style, "line-height", style.lineHeight]);
+              this.updateStyle(style, "line-height", size);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      // pass
+    }
+
+    return () => {
+      for (const params of resetStylesInCss) {
+        this.updateStyle(...params);
+      }
+    };
+  };
+
+  private isOverSizeTextBox = (node: Node) => {
+    if (!(node instanceof HTMLElement)) {
+      return false;
+    }
+
+    const fixSizeBox =
+      (!node.style.overflow || node.style.overflow.includes("visible")) &&
+      (node.style.height || node.style.width);
+    if (!fixSizeBox) {
+      return false;
+    }
+
+    const overSize =
+      node.offsetWidth + 20 < node.scrollWidth ||
+      node.offsetHeight + 20 < node.scrollHeight;
+    return overSize;
+  };
+
+  private zoomText = (container: HTMLElement, scale: number) => {
+    let originalWidth = container.scrollWidth;
+    let viewportScale = Math.max(1 / scale, 0.5);
+
+    if (scale <= 1.1) {
+      return true;
+    }
+
+    const elementsToAdjust = this.filterElementsThatNeedAdjust(
+      container,
+      scale
+    );
+
+    // 150 is a magic number found in Gmail Web
+    if (elementsToAdjust.length > 150) {
+      this.adjustViewport(container, viewportScale);
+      return false;
+    }
+
+    for (const elObj of elementsToAdjust) {
+      elObj.element.style[elObj.styleProp] = elObj.value;
+    }
+
+    const resetStylesInCss = this.zoomFontSizeInCss(scale);
+
+    const restoreAdjustment = () => {
+      for (const elObj of elementsToAdjust) {
+        elObj.element.style[elObj.styleProp] = elObj.originalValue;
+      }
+      resetStylesInCss();
+    };
+
+    // restore adjustment case1, a special case for case2
+    const threshold =
+      (container.scrollWidth - originalWidth) /
+      (originalWidth * scale - originalWidth);
+    if (threshold >= 0.2) {
+      restoreAdjustment();
+      this.adjustViewport(container, viewportScale);
+      return false;
+    }
+
+    // restore adjustment case2
+    /* example, if scale the font-size, the content will overflow the <div> element
+      <div style="width: 200px; height: 90px; background-color: red">
+          <p>
+              test test test test test test test test test test test test test test test test test test test test
+              test
+          </p>
+      </div>
+    */
+    const walker = document.createTreeWalker(
+      container,
+      NodeFilter.SHOW_ELEMENT
+    );
+    let node = walker.nextNode();
+    while (node) {
+      if (this.isOverSizeTextBox(node)) {
+        restoreAdjustment();
+        this.adjustViewport(container, viewportScale);
+        return false;
+      }
+      node = walker.nextNode();
+    }
+
+    return true;
+  };
+
+  private scaleContent = (
+    element: HTMLElement,
+    fromWidth: number,
+    scale: number
+  ) => {
     // element scale is a little small then the scale, to keep the width is enough
     const scaleWithBuffer = Math.floor(scale * 100) / 100;
     element.style.width = fromWidth + "px";
@@ -83,149 +250,41 @@ class SmartResize {
     element.classList.add("edo-transform");
   };
 
-  scaleQuotedControl = (element: HTMLElement, scale: number) => {
+  private scaleQuotedControl = (element: HTMLElement, scale: number) => {
     element.style.transform = "scale(" + 1 / scale + ")";
     element.classList.add("edo-transform");
   };
 
-  zoomFontSizeInCss = (sheet: CSSStyleSheet, scale: number) => {
-    const max = 17;
-    const rules = this.getCssRules(sheet);
-    for (const rule of rules) {
-      const style = rule.style;
-      if (style && style.fontSize) {
-        if (parseInt(style.fontSize) < max * scale) {
-          const size = this.zoomedSize(style.fontSize, scale, max);
-          if (size) {
-            this.updateStyle(style, "font-size", size);
-          }
-        }
-      }
-      if (style && style.lineHeight) {
-        const size = this.zoomedSize(style.lineHeight, scale);
-        if (size) {
-          this.updateStyle(style, "line-height", size);
-        }
-      }
-    }
+  private adjustViewport = (container: HTMLElement, scale: number) => {
+    const viewportEl = document.querySelector("meta[name=viewport]");
+    viewportEl?.setAttribute(
+      "content",
+      `width=device-width, initial-scale=${scale}, minimum-scale=${scale}, user-scalable=yes`
+    );
+    container.style.transform = "";
+    container.style.overflow = "auto";
   };
 
-  zoomText = (element: HTMLElement, scale: number) => {
-    const max = 15;
-    if (element.tagName == "IMG") {
-      return;
-    }
-    if (element.style.height && element.style.height.indexOf("%") === -1) {
-      if (!element.style.fontSize) {
-        const elementStyles = getComputedStyle(element);
-        if (elementStyles.fontSize) {
-          const updateSize = this.zoomedSize(elementStyles.fontSize, 1 / scale);
-          element.style.fontSize = updateSize;
-        }
-      }
+  smartResize = (container: HTMLElement, ratio: number) => {
+    if (ratio < 0.15) {
+      this.adjustViewport(container, 0.5);
       return;
     }
 
-    let safeScale = 1.0;
-    const originalWidth = element.scrollWidth;
-
-    if (element.tagName === "FONT") {
-      const sizeAttribute = element.getAttribute("size");
-      if (sizeAttribute) {
-        element.style.wordBreak = "normal";
-        element.style.wordWrap = "normal";
-        const originalSize = Number(sizeAttribute);
-        let s = Math.ceil(originalSize * scale);
-        safeScale = s / originalSize;
-        element.setAttribute("size", String(s));
-        if (element.scrollWidth > originalWidth) {
-          const level2scale = (0.9 * originalWidth) / element.scrollWidth;
-          safeScale = safeScale * level2scale;
-          s = Math.floor(level2scale * s);
-          element.setAttribute("size", String(s));
-        }
-        element.style.wordBreak = "";
-        element.style.wordWrap = "";
-        return;
-      }
-    }
-
-    if (element.style.fontSize) {
-      const originalFontSize = element.style.fontSize;
-      if (parseInt(originalFontSize) < max * scale) {
-        let s = this.zoomedSize(originalFontSize, scale, max);
-        if (s) {
-          element.style.wordBreak = "normal";
-          element.style.wordWrap = "normal";
-          this.updateStyle(element.style, "font-size", s);
-          if (parseFloat(s) && parseFloat(originalFontSize)) {
-            safeScale = parseFloat(s) / parseFloat(originalFontSize);
+    if (ratio < 1) {
+      const shouldPerformTransform = this.zoomText(container, 1 / ratio);
+      if (shouldPerformTransform) {
+        try {
+          this.scaleContent(container, container.scrollWidth, ratio);
+          const quotedControl = document.querySelector(".quoted-btn svg");
+          if (quotedControl) {
+            this.scaleQuotedControl(quotedControl as HTMLElement, ratio);
           }
-          if (
-            element.previousElementSibling ||
-            element.nextElementSibling ||
-            element.tagName != "TD"
-          ) {
-            if (element.scrollWidth > originalWidth) {
-              const level2scale = (0.9 * originalWidth) / element.scrollWidth;
-              safeScale = safeScale * level2scale;
-              s = this.zoomedSize(s, level2scale);
-              if (s) {
-                this.updateStyle(element.style, "font-size", s);
-              }
-            }
-          }
-          element.style.wordBreak = "";
-          element.style.wordWrap = "";
+          document.body.style.height =
+            container.getBoundingClientRect().height + "px";
+        } catch (err) {
+          // pass
         }
-      }
-    }
-
-    if (safeScale > 1.0) {
-      if (element.style.lineHeight) {
-        const s = this.zoomedSize(element.style.lineHeight, safeScale);
-        if (s) {
-          this.updateStyle(element.style, "line-height", s);
-        }
-      }
-    } else if (
-      !element.style.fontSize ||
-      this.isRelativeFontSize(element.style.fontSize)
-    ) {
-      if (element.style.lineHeight) {
-        this.updateStyle(element.style, "line-height", "");
-      }
-    }
-  };
-
-  scaleDownText = (element: HTMLElement, scale: number) => {
-    let scaled = false;
-    const sizeAttribute = element.getAttribute("size");
-
-    if (element.tagName == "FONT" && sizeAttribute) {
-      const originalSize = Number(sizeAttribute);
-      const s = Math.floor(originalSize * scale);
-      element.setAttribute("size", String(s));
-      scaled = true;
-    } else if (element.style.fontSize) {
-      const originalSize = element.style.fontSize;
-      const originalWidth = element.parentElement?.scrollWidth || 0;
-      const s = this.zoomedSize(originalSize, scale);
-      if (s) {
-        this.updateStyle(element.style, "font-size", s);
-        const nowWidth = element.parentElement?.scrollWidth || 0;
-        if (originalWidth === nowWidth) {
-          this.updateStyle(element.style, "font-size", originalSize);
-        } else {
-          scaled = true;
-        }
-      }
-    }
-
-    if (scaled && element.style.lineHeight && !element.style.height) {
-      const s = this.zoomedSize(element.style.lineHeight, scale);
-      if (s) {
-        this.updateStyle(element.style, "line-height", s);
       }
     }
   };

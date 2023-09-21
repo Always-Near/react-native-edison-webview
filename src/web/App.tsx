@@ -57,7 +57,7 @@ class App extends React.Component<any, State> {
   private hasImageInBody: boolean = true;
   private hasAllImageLoad: boolean = false;
   private ratio = 1;
-  private windowInnerWidth = 0;
+  private screenWidth = 0;
   private viewportScale = false;
   private viewportScrollEnd = false;
 
@@ -75,7 +75,7 @@ class App extends React.Component<any, State> {
   }
 
   componentDidMount() {
-    this.windowInnerWidth = window.innerWidth;
+    this.screenWidth = screen.width;
 
     window.setHTML = this.setHTML;
     window.addEventListener("resize", this.onWindowResize);
@@ -192,17 +192,10 @@ class App extends React.Component<any, State> {
   };
 
   private onWindowResize = () => {
-    if (this.windowInnerWidth != window.innerWidth) {
-      this.windowInnerWidth = window.innerWidth;
-
-      if (this.ratio != 1) {
-        location.reload();
-      } else {
-        this.smartResize();
-      }
+    if (this.screenWidth != screen.width) {
+      this.screenWidth = screen.width;
+      this.smartResize();
     } else {
-      this.windowInnerWidth = window.innerWidth;
-
       this.updateSize("window-resize");
     }
   };
@@ -271,9 +264,7 @@ class App extends React.Component<any, State> {
       if (!container) {
         return;
       }
-      Array.from(container.querySelectorAll("a")).forEach((ele) => {
-        OversizeUtil.fixLongURL(ele);
-      });
+      OversizeUtil.fixLongURLAndText(container);
     } catch (err) {
       // pass
     }
@@ -353,62 +344,8 @@ class App extends React.Component<any, State> {
     }
     const targetWidth = window.innerWidth;
     const originalWidth = container.scrollWidth;
-    if (originalWidth > targetWidth) {
-      this.ratio = targetWidth / originalWidth;
-      try {
-        ResizeUtil.scaleContent(container, originalWidth, this.ratio);
-        const quotedControl = document.querySelector(".quoted-btn svg");
-        if (quotedControl) {
-          ResizeUtil.scaleQuotedControl(
-            quotedControl as HTMLElement,
-            this.ratio
-          );
-        }
-      } catch (err) {
-        // pass
-      }
-
-      const sheets = document.styleSheets;
-      try {
-        for (const sheet of sheets) {
-          ResizeUtil.zoomFontSizeInCss(sheet, 1.0 / this.ratio);
-        }
-      } catch (err) {
-        // pass
-      }
-
-      const fontSizeElements = container.querySelectorAll(
-        "*[style], font[size]"
-      );
-      try {
-        for (const element of fontSizeElements) {
-          if (element instanceof HTMLElement) {
-            ResizeUtil.zoomText(element, 1.0 / this.ratio);
-          }
-        }
-      } catch (err) {
-        // pass
-      }
-      try {
-        if (container.scrollWidth > container.offsetWidth + 20) {
-          const elements = container.querySelectorAll(
-            "td>a[style], td>span[style], td>font[size]"
-          );
-          for (const element of elements) {
-            if (element instanceof HTMLElement) {
-              ResizeUtil.scaleDownText(
-                element,
-                (container.offsetWidth - 20) / container.scrollWidth
-              );
-            }
-          }
-        }
-      } catch (err) {
-        // pass
-      }
-
-      document.body.style.height = container.offsetHeight * this.ratio + "px";
-    }
+    this.ratio = targetWidth / originalWidth;
+    ResizeUtil.smartResize(container, this.ratio);
     this.updateSize("html-reload");
   };
 
@@ -423,6 +360,13 @@ class App extends React.Component<any, State> {
           SpecialHandle.removeFacebookHiddenText(node);
         }
       });
+      Array.from(container.querySelectorAll("[contenteditable=true]")).forEach(
+        (node) => {
+          if (node instanceof HTMLElement) {
+            SpecialHandle.disableContentEditableElements(node);
+          }
+        }
+      );
     } catch (err) {
       // pass
     }
