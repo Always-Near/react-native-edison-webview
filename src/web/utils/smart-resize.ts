@@ -172,7 +172,7 @@ class SmartResize {
 
   private zoomText = (container: HTMLElement, scale: number) => {
     let originalWidth = container.scrollWidth;
-    let viewportScale = Math.max(1 / scale, 0.5);
+    const viewportScale = Math.max(1 / scale, 0.5);
 
     if (scale <= 1.1) {
       return true;
@@ -268,7 +268,7 @@ class SmartResize {
   smartResize = (container: HTMLElement, ratio: number) => {
     if (ratio < 0.15) {
       this.adjustViewport(container, 0.5);
-      return;
+      return 0.5;
     }
 
     if (ratio < 1) {
@@ -282,11 +282,14 @@ class SmartResize {
           }
           document.body.style.height =
             container.getBoundingClientRect().height + "px";
+          return ratio;
         } catch (err) {
           // pass
         }
       }
+      return Math.max(ratio, 0.5);
     }
+    return 1;
   };
 }
 

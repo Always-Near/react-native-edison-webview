@@ -167,7 +167,7 @@ class App extends React.Component<any, State> {
 
     this.postMessage(
       EventName.HeightChange,
-      container.scrollHeight * this.ratio
+      container.scrollHeight * this.ratio + 34 // 2ex buffer
     );
   };
 
@@ -344,8 +344,8 @@ class App extends React.Component<any, State> {
     }
     const targetWidth = window.innerWidth;
     const originalWidth = container.scrollWidth;
-    this.ratio = targetWidth / originalWidth;
-    ResizeUtil.smartResize(container, this.ratio);
+    const ratio = targetWidth / originalWidth;
+    this.ratio = ResizeUtil.smartResize(container, ratio);
     this.updateSize("html-reload");
   };
 
