@@ -6,6 +6,7 @@ export const EventName = {
   ClickLink: "clickLink",
   onImageDownload: "onImageDownload",
   Debugger: "debugger",
+  Error: "error",
   ResizeViewport: "resizeViewport",
   OnScrollEndViewport: "onScrollEndViewport",
 } as const;

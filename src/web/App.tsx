@@ -10,6 +10,7 @@ import QuotedHTMLTransformer from "./utils/quoted-html-transformer";
 import ResizeUtil from "./utils/smart-resize";
 import SpecialHandle from "./utils/special-handle";
 import { autolink } from "./utils/auto-link";
+import { findDecodeErrorString } from "./utils/base";
 
 const BackgroundBaseColorForDark = {
   PreviewMode: "rgb(37,37,37)",
@@ -108,47 +109,97 @@ class App extends React.Component<any, State> {
     }
   };
 
-  private setHTML = (params: string) => {
+  private parseJSON = (
+    params: string
+  ): {
+    html: string;
+    imageProxyTemplate: string;
+    isDarkMode: boolean;
+    isPreviewMode: boolean;
+    disabeHideQuotedText: boolean;
+    platform: "ios" | "android" | "windows" | "macos" | "web";
+  } => {
+    const defaultResult = {
+      html: "",
+      imageProxyTemplate: "",
+      isDarkMode: false,
+      isPreviewMode: false,
+      disabeHideQuotedText: false,
+      platform: "ios",
+    } as const;
     try {
-      const {
-        html,
-        imageProxyTemplate,
-        isDarkMode = false,
-        isPreviewMode = false,
-        disabeHideQuotedText,
+      const data = JSON.parse(params);
+      return {
+        html: data.html || defaultResult.html,
+        imageProxyTemplate:
+          data.imageProxyTemplate || defaultResult.imageProxyTemplate,
+        isDarkMode: data.isDarkMode || defaultResult.isDarkMode,
+        isPreviewMode: data.isPreviewMode || defaultResult.isPreviewMode,
+        disabeHideQuotedText:
+          data.disabeHideQuotedText || defaultResult.disabeHideQuotedText,
+        platform: data.platform || defaultResult.platform,
+      };
+    } catch (e: any) {
+      this.postMessage(
+        EventName.Error,
+        `parse JSON input error, string: "${params.slice(0, 20)}".`
+      );
+      return defaultResult;
+    }
+  };
+
+  private parseHTML = (html: string) => {
+    try {
+      const htmlStr = decodeURIComponent(html);
+      return htmlStr;
+    } catch (e: any) {
+      const errorString = findDecodeErrorString(html);
+      this.postMessage(
+        EventName.Error,
+        `decodeURIComponent html error, string: "${errorString}".`
+      );
+      return "";
+    }
+  };
+
+  private setHTML = (params: string) => {
+    const {
+      html,
+      imageProxyTemplate,
+      isDarkMode,
+      isPreviewMode,
+      disabeHideQuotedText,
+      platform,
+    } = this.parseJSON(params);
+
+    if (html) {
+      const htmlStr = this.parseHTML(html);
+      // clear the meta to keep style
+      const regMeta = /<meta\s+name=(['"\s]?)viewport\1\s+content=[^>]*>/gi;
+      // clear @media for orientation: landscape
+      const regOrientation =
+        /@media screen and [:()\s\w-]*\(orientation: landscape\)/g;
+      const formatHTML = htmlStr
+        .replace(regMeta, "")
+        .replace(regOrientation, "");
+      const { hasImgOrVideo, html: addImageProxyHtml } = addProxyForImage(
+        formatHTML,
+        imageProxyTemplate
+      );
+      const { showQuotedText } = this.state;
+      const showHtml =
+        showQuotedText || disabeHideQuotedText
+          ? addImageProxyHtml
+          : QuotedHTMLTransformer.removeQuotedHTML(addImageProxyHtml);
+      this.setState({
+        html: addImageProxyHtml,
+        showHtml,
+        hasImgOrVideo,
+        isDarkMode,
+        isPreviewMode,
         platform,
-      } = JSON.parse(params);
-      if (html) {
-        const htmlStr = decodeURIComponent(html);
-        // clear the meta to keep style
-        const regMeta = /<meta\s+name=(['"\s]?)viewport\1\s+content=[^>]*>/gi;
-        // clear @media for orientation: landscape
-        const regOrientation =
-          /@media screen and [:()\s\w-]*\(orientation: landscape\)/g;
-        const formatHTML = htmlStr
-          .replace(regMeta, "")
-          .replace(regOrientation, "");
-        const { hasImgOrVideo, html: addImageProxyHtml } = addProxyForImage(
-          formatHTML,
-          imageProxyTemplate
-        );
-        const { showQuotedText } = this.state;
-        const showHtml =
-          showQuotedText || disabeHideQuotedText
-            ? addImageProxyHtml
-            : QuotedHTMLTransformer.removeQuotedHTML(addImageProxyHtml);
-        this.setState({
-          html: addImageProxyHtml,
-          showHtml,
-          hasImgOrVideo,
-          isDarkMode,
-          isPreviewMode,
-          platform,
-          disabeHideQuotedText,
-        });
-      }
-    } catch (e) {
-      console.error(e);
+        disabeHideQuotedText,
+      });
     }
   };
 
