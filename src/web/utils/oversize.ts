@@ -100,7 +100,6 @@ class OversizeUtils {
   limitImageWidth(element: HTMLImageElement, documentWidth: number) {
     if (this.imageIsOverSize(element, documentWidth)) {
       element.classList.add("edo-limit-width");
-      element.style.height = "auto";
       element.style.maxWidth = "100%";
       return;
     }
