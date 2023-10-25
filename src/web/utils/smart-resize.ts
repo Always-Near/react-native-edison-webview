@@ -74,6 +74,26 @@ class SmartResize {
     return nodeList;
   };
 
+  private getFilterNodeForFontSyle = (
+    element: HTMLElement,
+    scale: number,
+    styleProp: "fontSize" | "lineHeight"
+  ) => {
+    let value = "0";
+    if (document.defaultView && document.defaultView.getComputedStyle) {
+      const style = document.defaultView.getComputedStyle(element, null);
+      if (style) {
+        value = style[styleProp] || style.getPropertyValue(styleProp) || "";
+      }
+    }
+    return {
+      element,
+      styleProp,
+      value: parseInt(value, 10) * scale + "px",
+      originalValue: value,
+    };
+  };
+
   private filterElementsThatNeedAdjust = (
     element: HTMLElement,
     scale: number
@@ -90,22 +110,15 @@ class SmartResize {
       const hasFontSize =
         (el.style && el.style["fontSize"]) || el.getAttribute("size");
       const hasLineHeight = el.style && el.style["lineHeight"];
-
-      if (hasFontSize || hasLineHeight) {
-        const styleProp = hasFontSize ? "fontSize" : "lineHeight";
-        let value = "0";
-        if (document.defaultView && document.defaultView.getComputedStyle) {
-          const style = document.defaultView.getComputedStyle(el, null);
-          if (style) {
-            value = style[styleProp] || style.getPropertyValue(styleProp) || "";
-          }
-        }
-        filterNodeList.push({
-          element: el,
-          styleProp,
-          value: parseInt(value, 10) * scale + "px",
-          originalValue: value,
-        });
+      if (hasFontSize) {
+        filterNodeList.push(
+          this.getFilterNodeForFontSyle(el, scale, "fontSize")
+        );
+      }
+      if (hasLineHeight) {
+        filterNodeList.push(
+          this.getFilterNodeForFontSyle(el, scale, "lineHeight")
+        );
       }
     }
 
