@@ -395,7 +395,15 @@ class App extends React.Component<any, State> {
     }
     const targetWidth = window.innerWidth;
     const originalWidth = container.scrollWidth;
-    const ratio = targetWidth / originalWidth;
+    const containerScale = container.style.transform;
+    let scaleX = 1;
+    if (containerScale) {
+      const scale = Number(/\d+\.?\d*/.exec(containerScale));
+      if (!Number.isNaN(scale)) {
+        scaleX = scale;
+      }
+    }
+    const ratio = targetWidth / (originalWidth * scaleX);
     this.ratio = ResizeUtil.smartResize(container, ratio);
     this.updateSize("html-reload");
   };
