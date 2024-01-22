@@ -12,6 +12,7 @@ const packageName = "react-native-edison-webview";
 
 const InjectScriptName = {
   SetHTML: "setHTML",
+  OnInlineImageDownload: "onInlineImageDownload",
 } as const;
 
 const messageBodyFileTargetPath = `file://${RNFS.CachesDirectoryPath}/messageBody.html`;
@@ -63,8 +64,8 @@ async function copyFile() {
 copyFile();
 
 export type WebviewEvent = Exclude<
-  typeof EventName[keyof typeof EventName],
-  typeof EventName["IsMounted"]
+  (typeof EventName)[keyof typeof EventName],
+  (typeof EventName)["IsMounted"]
 >;
 
 type WithoutProps =
@@ -119,7 +120,7 @@ export default class RNWebView extends Component<
   }
 
   private executeScript = (
-    functionName: typeof InjectScriptName[keyof typeof InjectScriptName],
+    functionName: (typeof InjectScriptName)[keyof typeof InjectScriptName],
     parameter?: string
   ) => {
     if (!this.webViewRef.current) {
@@ -148,7 +149,7 @@ export default class RNWebView extends Component<
   private onMessage = (event: WebViewMessageEvent) => {
     try {
       const messageData: {
-        type: typeof EventName[keyof typeof EventName];
+        type: (typeof EventName)[keyof typeof EventName];
         data: any;
       } = JSON.parse(event.nativeEvent.data);
       if (messageData.type === EventName.IsMounted) {
@@ -175,6 +176,16 @@ export default class RNWebView extends Component<
         platform: Platform.OS,
       })
     );
+  };
+
+  onInlineImageDownload = (attachmentId: string, path: string) => {
+    const imageData = encodeURIComponent(
+      JSON.stringify({
+        attachmentId,
+        path,
+      })
+    );
+    this.executeScript(InjectScriptName.OnInlineImageDownload, imageData);
   };
 
   render() {

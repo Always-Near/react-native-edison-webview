@@ -79,6 +79,7 @@ class App extends React.Component<any, State> {
     this.screenWidth = screen.width;
 
     window.setHTML = this.setHTML;
+    window.onInlineImageDownload = this.onInlineImageDownload;
     window.addEventListener("resize", this.onWindowResize);
     if (this.state.platform != "ios") {
       window.visualViewport?.addEventListener("resize", this.onResizeViewport);
@@ -200,6 +201,57 @@ class App extends React.Component<any, State> {
         platform,
         disabeHideQuotedText,
       });
+    }
+  };
+
+  private parseImage = (imageData: string) => {
+    try {
+      const data = JSON.parse(decodeURIComponent(imageData));
+      return {
+        attachmentId: data.attachmentId || "",
+        path: data.path || "",
+      };
+    } catch (e: any) {
+      this.postMessage(
+        EventName.Error,
+        `parse JSON input error, string: "${imageData.slice(0, 20)}".`
+      );
+      return { attachmentId: "", path: "" };
+    }
+  };
+
+  private onInlineImageDownload = (params: string) => {
+    const { attachmentId, path } = this.parseImage(params);
+
+    if (!attachmentId || !path) {
+      return;
+    }
+
+    const allImages = document.querySelectorAll("img");
+    const targetImage = Array.from(allImages).find((img) => {
+      const reg = new RegExp(`^cid:${attachmentId}$`, "gi");
+      return reg.test(img.src);
+    });
+    if (targetImage) {
+      targetImage.src = path;
+
+      // add load event to update webview size
+      targetImage.addEventListener("load", () => this.onImageLoad(targetImage));
+      // add load error event to reset src
+      targetImage.addEventListener("error", () =>
+        handleImageLoadError(targetImage)
+      );
+      // add longPress event to download image
+      if (this.state.platform != "ios") {
+        const ImageDownloadUtil = new ImageDownload(
+          targetImage,
+          this.onImageDownload
+        );
+        ImageDownloadUtil.addEventListener();
+      }
+
+      this.limitImageWidth();
+      this.smartResize();
     }
   };
 
