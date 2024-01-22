@@ -146,6 +146,27 @@ export default class RNWebView extends Component<
     );
   };
 
+  private executeScriptWhenMounted = (
+    functionName: (typeof InjectScriptName)[keyof typeof InjectScriptName],
+    parameter?: string
+  ) => {
+    if (!this.webViewRef.current) {
+      return;
+    }
+
+    if (!this.webviewMounted) {
+      setTimeout(() => {
+        this.executeScriptWhenMounted(functionName, parameter);
+      }, 100);
+      return;
+    }
+    this.webViewRef.current.injectJavaScript(
+      `window.${functionName} && window.${functionName}(${
+        parameter ? `\`${parameter}\`` : ""
+      });true;`
+    );
+  };
+
   private onMessage = (event: WebViewMessageEvent) => {
     try {
       const messageData: {
@@ -185,7 +206,10 @@ export default class RNWebView extends Component<
         path,
       })
     );
-    this.executeScript(InjectScriptName.OnInlineImageDownload, imageData);
+    this.executeScriptWhenMounted(
+      InjectScriptName.OnInlineImageDownload,
+      imageData
+    );
   };
 
   render() {
