@@ -491,6 +491,15 @@ class App {
     if (this.state.isDarkMode) {
       this.applyDarkMode();
     }
+
+    if (this.state.isDarkMode) {
+      setTimeout(() => {
+        this.onload();
+      }, 300);
+    } else {
+      this.onload();
+    }
+
     autolink();
     this.addEventListenerForLink();
     this.addEventListenerForImage();
@@ -499,12 +508,6 @@ class App {
     this.limitImageWidth();
     this.smartResize();
     this.specialHandle();
-
-    if (this.state.isDarkMode) {
-      this.debounceOnload();
-    } else {
-      this.onload();
-    }
 
     if (!this.hasImageInBody) {
       this.onAllImageLoad();
@@ -516,8 +519,6 @@ class App {
   private onload = () => {
     this.postMessage(EventName.OnLoad, true);
   };
-
-  private debounceOnload = debounce(this.onload, 300);
 
   private toggleshowQuotedText = () => {
     const { html, showQuotedText, disabeHideQuotedText } = this.state;
