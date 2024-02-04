@@ -1,6 +1,4 @@
-import React from "react";
 import { EventName } from "../constants";
-import QuotedControl from "./components/QuotedControl";
 import "./styles";
 import DarkModeUtil from "./utils/dark-mode";
 import ImageDownload from "./utils/image-download";
@@ -11,6 +9,8 @@ import ResizeUtil from "./utils/smart-resize";
 import SpecialHandle from "./utils/special-handle";
 import { autolink } from "./utils/auto-link";
 import { findDecodeErrorString } from "./utils/base";
+
+export {};
 
 const BackgroundBaseColorForDark = {
   PreviewMode: "rgb(37,37,37)",
@@ -36,12 +36,6 @@ const lightModeStyle = () => `
   }
 `;
 
-const previewModeStyle = () => `
-  html #edo-container {
-    overflow-x: hidden;
-  }
-`;
-
 type EventType = (typeof EventName)[keyof typeof EventName];
 type State = {
   isDarkMode: boolean;
@@ -54,28 +48,24 @@ type State = {
   showQuotedText: boolean;
 };
 
-class App extends React.Component<any, State> {
+class App {
   private hasImageInBody: boolean = true;
   private hasAllImageLoad: boolean = false;
   private ratio = 1;
   private screenWidth = 0;
   private viewportScale = false;
   private viewportScrollEnd = false;
+  private state: State = {
+    isDarkMode: false,
+    isPreviewMode: false,
+    hasImgOrVideo: false,
+    html: "",
+    showHtml: "",
+    disabeHideQuotedText: false,
+    showQuotedText: false,
+  };
 
-  constructor(props: any) {
-    super(props);
-    this.state = {
-      isDarkMode: false,
-      isPreviewMode: false,
-      hasImgOrVideo: false,
-      html: "",
-      showHtml: "",
-      disabeHideQuotedText: false,
-      showQuotedText: false,
-    };
-  }
-
-  componentDidMount() {
+  constructor() {
     this.screenWidth = screen.width;
 
     window.setHTML = this.setHTML;
@@ -86,18 +76,32 @@ class App extends React.Component<any, State> {
       window.visualViewport?.addEventListener("scroll", this.onScrollViewport);
     }
 
+    this.render();
+
+    const quotedControlNode = document.querySelector("#quoted-btn");
+    if (quotedControlNode) {
+      quotedControlNode.addEventListener("click", this.toggleshowQuotedText);
+    }
+
     this.postMessage(EventName.IsMounted, true);
   }
 
-  componentDidUpdate(preProps: any, preState: State) {
+  private setState = <K extends keyof State>(state: Pick<State, K> | State) => {
+    const preState = Object.assign({}, this.state);
+    const nextState = Object.assign({}, this.state);
+    Object.keys(state).forEach((key) => {
+      nextState[key as K] = state[key as K] as State[K];
+    });
+    this.state = nextState;
+    this.render();
     if (
-      preState.showHtml !== this.state.showHtml ||
-      preState.isDarkMode !== this.state.isDarkMode ||
-      preState.isPreviewMode !== this.state.isPreviewMode
+      preState.showHtml !== nextState.showHtml ||
+      preState.isDarkMode !== nextState.isDarkMode ||
+      preState.isPreviewMode !== nextState.isPreviewMode
     ) {
-      this.debounceOnContentChange();
+      this.onContentChange();
     }
-  }
+  };
 
   private postMessage = (type: EventType, data: any) => {
     if (window.ReactNativeWebView) {
@@ -487,6 +491,15 @@ class App extends React.Component<any, State> {
     if (this.state.isDarkMode) {
       this.applyDarkMode();
     }
+
+    if (this.state.isDarkMode) {
+      setTimeout(() => {
+        this.onload();
+      }, 300);
+    } else {
+      this.onload();
+    }
+
     autolink();
     this.addEventListenerForLink();
     this.addEventListenerForImage();
@@ -495,12 +508,6 @@ class App extends React.Component<any, State> {
     this.limitImageWidth();
     this.smartResize();
     this.specialHandle();
-
-    if (this.state.isDarkMode) {
-      this.debounceOnload();
-    } else {
-      this.onload();
-    }
 
     if (!this.hasImageInBody) {
       this.onAllImageLoad();
@@ -512,8 +519,6 @@ class App extends React.Component<any, State> {
   private onload = () => {
     this.postMessage(EventName.OnLoad, true);
   };
-
-  private debounceOnload = debounce(this.onload, 300);
 
   private toggleshowQuotedText = () => {
     const { html, showQuotedText, disabeHideQuotedText } = this.state;
@@ -537,23 +542,49 @@ class App extends React.Component<any, State> {
       isPreviewMode,
       hasImgOrVideo,
     } = this.state;
-    const containerStyles: React.CSSProperties =
-      isPreviewMode && !hasImgOrVideo ? { padding: "2ex" } : {};
-    return (
-      <>
-        <style>
-          {isDarkMode ? darkModeStyle(isPreviewMode) : lightModeStyle()}
-          {isPreviewMode ? previewModeStyle() : ""}
-        </style>
 
-        <div style={containerStyles}>
-          <div dangerouslySetInnerHTML={{ __html: showHtml }}></div>
-          {disabeHideQuotedText ? null : (
-            <QuotedControl html={html} onClick={this.toggleshowQuotedText} />
-          )}
-        </div>
-      </>
-    );
+    const globalStyleNode = document.querySelector(".global-style");
+    if (globalStyleNode) {
+      const globalStyle = isDarkMode
+        ? darkModeStyle(isPreviewMode)
+        : lightModeStyle();
+      globalStyleNode.innerHTML = globalStyle || "";
+    }
+
+    const containerNode = document.querySelector("#container");
+    if (containerNode) {
+      const showPadding = isPreviewMode && !hasImgOrVideo;
+      if (showPadding) {
+        containerNode.classList.add("padding");
+      } else {
+        containerNode.classList.remove("padding");
+      }
+    }
+
+    const edoContainerNode = document.querySelector("#edo-container");
+    if (edoContainerNode) {
+      if (isPreviewMode) {
+        edoContainerNode.classList.add("is-preview-mode");
+      } else {
+        edoContainerNode.classList.remove("is-preview-mode");
+      }
+    }
+
+    const bodyNode = document.querySelector("#body");
+    if (bodyNode) {
+      bodyNode.innerHTML = showHtml;
+    }
+
+    const quotedControlNode = document.querySelector("#quoted-btn");
+    if (quotedControlNode) {
+      const showQuotedControl =
+        !disabeHideQuotedText && QuotedHTMLTransformer.hasQuotedHTML(html);
+      if (showQuotedControl) {
+        quotedControlNode.classList.remove("hidden");
+      } else {
+        quotedControlNode.classList.add("hidden");
+      }
+    }
   }
 }
 
@@ -570,4 +601,4 @@ function debounce<T extends Array<any>>(
   };
 }
 
-export default App;
+window.onload = () => new App();
