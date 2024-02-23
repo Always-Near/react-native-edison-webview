@@ -278,14 +278,17 @@ class SmartResize {
     container.style.overflow = "auto";
   };
 
-  smartResize = (container: HTMLElement, ratio: number) => {
+  smartResize = (container: HTMLElement, ratio: number, preScaleX: number) => {
     if (ratio < 0.15) {
       this.adjustViewport(container, 0.5);
       return 0.5;
     }
 
     if (ratio < 1) {
-      const shouldPerformTransform = this.zoomText(container, 1 / ratio);
+      const shouldPerformTransform = this.zoomText(
+        container,
+        (1 / ratio) * preScaleX
+      );
       if (shouldPerformTransform) {
         try {
           this.scaleContent(container, container.scrollWidth, ratio);

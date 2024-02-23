@@ -459,8 +459,8 @@ class App {
         scaleX = scale;
       }
     }
-    const ratio = targetWidth / (originalWidth * scaleX);
-    this.ratio = ResizeUtil.smartResize(container, ratio);
+    const ratio = targetWidth / originalWidth;
+    this.ratio = ResizeUtil.smartResize(container, ratio, scaleX);
     this.updateSize("html-reload");
   };
 
