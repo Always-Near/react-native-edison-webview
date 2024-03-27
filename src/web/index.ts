@@ -95,9 +95,11 @@ class App {
     this.state = nextState;
     this.render();
     if (
+      preState.html !== nextState.html ||
       preState.showHtml !== nextState.showHtml ||
       preState.isDarkMode !== nextState.isDarkMode ||
-      preState.isPreviewMode !== nextState.isPreviewMode
+      preState.isPreviewMode !== nextState.isPreviewMode ||
+      preState.disabeHideQuotedText !== nextState.disabeHideQuotedText
     ) {
       this.onContentChange();
     }
